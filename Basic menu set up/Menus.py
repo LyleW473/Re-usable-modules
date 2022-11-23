@@ -10,13 +10,13 @@ screen_height = 800
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # Load images 
-# 400 x 25 pixels
+# Most buttons are (400 x 25) pixels
 play_image = pygame.image.load('graphics/Buttons/play_button.png').convert()
 controls_image = pygame.image.load('graphics/Buttons/controls_button.png').convert()
 quit_image = pygame.image.load('graphics/Buttons/quit_button.png').convert()
 back_image = pygame.image.load('graphics/Buttons/back_button.png').convert()
 return_to_main_menu_image = pygame.image.load('graphics/Buttons/return_to_main_menu_button.png').convert()
-
+continue_image = pygame.image.load('graphics/Buttons/continue_button.png').convert()
 
 
 # Colours
@@ -37,6 +37,7 @@ class Button():
 
     def update(self, pos):
         mouse_over_button = False
+        # Check for a collision between the button and the current mouse position
         if self.rect.collidepoint(pos):
             mouse_over_button = True
 
@@ -60,6 +61,9 @@ class Menu():
         self.show_main_menu = True # Determines whether we show the main menu or not
         self.show_controls_menu = False
         self.in_game = False # Determines whether we are in game or not
+        self.show_paused_menu = False
+
+        self.last_menu_visited = 0 # 1 = Main menu, 2 = Paused menu
 
 
     def update(self, pos):
@@ -70,7 +74,6 @@ class Menu():
             screen.fill(WHITE)
 
             # PLAY BUTTON
-    
             # If the mouse is over the play button and is the mouse button is clicked
             if play_button.update(pos) == True and self.clicked == True: 
                 print("play button clicked")
@@ -90,6 +93,9 @@ class Menu():
                 self.show_controls_menu = True
                 self.show_main_menu = False
 
+                # Set the last menu visited from the controls menu to be the paused menu
+                self.last_menu_visited = 1
+
             # QUIT BUTTON
             # If the mouse is over the quit button and is the mouse button is clicked
             if quit_button.update(pos) == True and self.clicked == True:
@@ -98,31 +104,80 @@ class Menu():
                 pygame.quit()
                 sys.exit()
 
-            # If the mouse was above none of the buttons above, that means the player clicked on empty space
+            # If none of the buttons above are True, that means the player clicked on empty space
             elif play_button.update(pos) == False and quit_button.update(pos) == False and self.clicked == True: 
                 print("empty space clicked")
                 # Reset the clicked variable to default so more clicks can be detected
                 self.clicked = False
 
-
             
         # CONTROLS MENU
         if self.show_controls_menu == True:
             screen.fill(GREEN)
+
+            # BACK BUTTON
             if back_button.update(pos) == True and self.clicked == True:
                 print("back button clicked")
                 # Reset the clicked variable to default so more clicks can be detected
                 self.clicked = False
 
-                # Go back to the main menu
-                self.show_main_menu = True
+                # Go back to the last menu 
+                if self.last_menu_visited == 1: # MAIN MENU
+                    self.show_main_menu = True
+
+                elif self.last_menu_visited == 2: # PAUSED MENU
+                    self.show_paused_menu = True
+
+                # Don't show the controls menu
                 self.show_controls_menu = False
 
-            # If the mouse was above none of the buttons above, that means the player clicked on empty space
+            # If none of the buttons above are True, that means the player clicked on empty space
             elif back_button.update(pos) == False and self.clicked == True: 
                 print("empty space clicked")
                 # Reset the clicked variable to default so more clicks can be detected
                 self.clicked = False
+
+
+        # PAUSED MENU
+        if self.show_paused_menu == True:
+            screen.fill(RED)
+            
+            # CONTINUE BUTTON
+            if continue_button.update(pos) == True and self.clicked == True: 
+                # Reset the clicked variable to default so more clicks can be detected
+                self.clicked = False
+
+                # Go back to the main game
+                self.in_game = True
+                self.show_paused_menu = False
+
+            # CONTROLS BUTTON
+            if controls_button_2.update(pos) == True and self.clicked == True: 
+                print("controls button clicked")
+                # Reset the clicked variable to default so more clicks can be detected
+                self.clicked = False
+
+                # Display the show controls menu
+                self.show_controls_menu = True
+                self.show_paused_menu = False   
+                
+                # Set the last menu visited from the controls menu to be the paused menu
+                self.last_menu_visited = 2
+
+            # QUIT BUTTON
+            # If the mouse is over the quit button and is the mouse button is clicked
+            if quit_button_2.update(pos) == True and self.clicked == True:
+                print("quit button clicked")
+                # Quit the game
+                pygame.quit()
+                sys.exit()
+
+            # If none of the buttons above are True, that means the player clicked on empty space
+            elif continue_button.update(pos) == False and controls_button_2.update(pos) == False and quit_button_2.update(pos) == False:
+                print("empty space clicked")
+                # Reset the clicked variable to default so more clicks can be detected
+                self.clicked = False             
+      
 
 
 
@@ -136,3 +191,9 @@ quit_button = Button(300, 600, quit_image)
 # Controls menu
 back_button = Button(300, 600, back_image)
 return_to_main_menu_button = Button(300, 400, return_to_main_menu_image)
+
+
+# Paused menu
+continue_button = Button(300, 200, continue_image)
+controls_button_2 = Button(300, 400, controls_image)
+quit_button_2 = Button(300, 600, quit_image)

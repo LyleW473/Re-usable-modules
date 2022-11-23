@@ -59,9 +59,10 @@ while run:
             if menu.in_game == True:    
                 # If the ESC key is pressed
                 if event.key == K_ESCAPE:
-                    # Show the main menu
-                    menu.show_main_menu = True
+                    # Show the paused menu
+                    menu.show_paused_menu = True
                     menu.in_game = False
+
 
 
     pygame.display.update()
