@@ -1,68 +1,68 @@
-# Import modules
 import pygame, sys
-from pygame.locals import *
-from Menus import Menu
+from settings import *
+from menu import Menu
 
 
-# Initialise pygame
-pygame.init()
+class Main:
 
-# Screen
-screen_width = 1000
-screen_height = 800
-screen = pygame.display.set_mode((screen_width, screen_height))
+    def __init__(self):
 
-# Colours
-RED = (255,0,0)
-GREEN = (0,255,0)
-BLUE = (0,0,255)
-WHITE = (255,255,255)
-BLACK = (0,0,0)
+        # Pygame set-up
+        pygame.init()
+        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        self.clock = pygame.time.Clock()
+        
+        # Menu
+        self.menu = Menu()
 
-# Game variables
+    def run(self):
 
-# Instances
-menu = Menu(0,0,screen)
+        while True:
+            
+            # Event handler
+            for event in pygame.event.get():
+
+                # If the exit button was pressed
+                if event.type == pygame.QUIT:
+                    # Close the program
+                    pygame.quit()
+                    sys.exit()
+                
+                # If a button (key) was pressed
+                if event.type == pygame.KEYDOWN:
+                    
+                    # If the key was the "Esc" button
+                    if event.key == pygame.K_ESCAPE:
+                        # Set in-game attribute to be False and show the paused menu
+                        self.menu.in_game = False
+                        self.menu.show_paused_menu = True
+                        
+
+            # --------------------------------------
+            # Menus
+
+            # If we aren't in-game (i.e. in the menus)
+            if self.menu.in_game == False:
+                # Run the menu 
+                self.menu.run()
+
+            # Main game
+
+            # If we are in-game 
+            elif self.menu.in_game == True:
+
+                # Fill the screen with blue
+                self.screen.fill("dodgerblue4")
+
+            # -------------------------------------
+            # Update display
+            pygame.display.update() 
+            # Limit FPS to 60
+            self.clock.tick(60)
 
 
-# Main loop
-run = True
-while run:
-
-    # Menu browsing and updating
-
-    # Find the position of the mouse
-    pos = pygame.mouse.get_pos()
-    # Update the menu, feeding the clicked variable and mouse position into the function
-    menu.update(pos) # Set the clicked variable as the returned value from the menu
     
-    # INGAME
-    if menu.in_game == True:
-        screen.fill(BLUE)
-
-    
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            run = False
-            pygame.quit()
-            sys.exit()
-
-        # Check if the mouse button has been pressed
-        if event.type == MOUSEBUTTONDOWN:
-            # Check if the mouse button clicked was the left click
-            if event.button == 1: # (1 = left, 2 = middle, 3 = right, 4 = scroll up, 5 = scrolldown)
-                menu.clicked = True
-
-        # Check if a key has been pressed
-        if event.type == KEYDOWN:
-            # Check if we are in game
-            if menu.in_game == True:    
-                # If the ESC key is pressed
-                if event.key == K_ESCAPE:
-                    # Show the paused menu
-                    menu.show_paused_menu = True
-                    menu.in_game = False
-
-
-
-    pygame.display.update()
+if __name__ == "__main__":
+    # Instantiate main and run it
+    main = Main()
+    main.run()
