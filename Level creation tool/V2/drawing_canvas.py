@@ -18,9 +18,10 @@ class PaletteTile(pygame.sprite.Sprite):
         self.rect.y = y
         self.screen = pygame.display.set_mode((screen_width, screen_height))
 
-    def draw(self):
-        # Draw the palette tile onto the screen
-        self.screen.blit(self.image, self.rect)
+    def draw(self, x, y):
+        # Draw the palette tile onto the screen 
+        # Note: These co-ordinates are passed into the method because I want the images to stay at the same position on the screen, but for the rect to move
+        self.screen.blit(self.image, (x, y))
 
 # Create drawing tiles
 class DrawingTiles():
@@ -75,7 +76,7 @@ class DrawingTiles():
         self.mouse_position = pygame.mouse.get_pos()
 
         # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
-        self.mouse_rect = pygame.Rect((self.mouse_position[0], self.mouse_position[1], 20, 20))
+        self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
 
         # If the left mouse button is pressed
         if pygame.mouse.get_pressed()[0]:
@@ -105,18 +106,29 @@ class DrawingTiles():
                     # Set the selected palette number to be the palette number of the palette tile that was clicked on
                     self.selected_palette_number = palette_tile.palette_number
 
-
-
-
         # If the "a" key is being pressed
         if pygame.key.get_pressed()[pygame.K_a]:
+
             # Move the origin point right
             self.origin_point.x += 5
-        
+
+            # For each palette tile in the palette tiles group
+            for palette_tile in self.palette_tiles_group:
+                # Move the palette tile rect left 
+                palette_tile.rect.x -= 5
+                
+
         # If the "d" key is being pressed
         elif pygame.key.get_pressed()[pygame.K_d]:
+            
             # Move the origin point left
             self.origin_point.x -= 5
+
+            # For each palette tile in the palette tiles group
+            for palette_tile in self.palette_tiles_group:
+                # Move the palette tile rect right
+                palette_tile.rect.x += 5
+
 
     def set_new_cursor(self):
         # Draw a circle where the mouse cursor is
@@ -153,10 +165,11 @@ class DrawingTiles():
             self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], self.origin_point.y + tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
 
     def draw_palette_tiles(self):
+
         # For every palette tile in the palette tiles group
-        for palette_tile in self.palette_tiles_group:
+        for i, palette_tile in enumerate(self.palette_tiles_group):
             # Draw the palette tile onto the screen
-            palette_tile.draw()
+            palette_tile.draw(50 + (100 * i), 600)
 
     def run(self):
 
@@ -173,4 +186,4 @@ class DrawingTiles():
         self.handle_user_input()
 
         # Set the cursor image to be the image of the selected palette tile
-        self.set_new_cursor()
+        self.set_new_cursor()   
