@@ -34,14 +34,23 @@ class DrawingTiles():
         for j in range(1, int(number_of_lines_y) + 1):
             pygame.draw.line(self.screen, "black", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 1)
 
-
     def handle_user_input(self):
         # Retrieve the mouse position
         self.mouse_position = pygame.mouse.get_pos()
 
+        # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
+        self.mouse_rect = pygame.Rect((self.mouse_position[0], self.mouse_position[1], 20, 20))
+        pygame.draw.rect(self.screen, "red", self.mouse_rect)
+
         # If the left mouse button is pressed
         if pygame.mouse.get_pressed()[0]:
-            print("left click") 
+            # Check for every tile inside the tile list
+            for tile in self.tile_list:
+
+                # If the mouse rect collides with the tile rect (tile[0] = tile rect, tile[1] = palette number )
+                if self.mouse_rect.colliderect(tile[0]):
+                    print(f"Clicked on {tile[0]}")
+
 
         # If the "a" key is being pressed
         if pygame.key.get_pressed()[pygame.K_a]:
@@ -52,8 +61,7 @@ class DrawingTiles():
         elif pygame.key.get_pressed()[pygame.K_d]:
             # Move the origin point left
             self.origin_point.x -= 5
-        
-        
+
     def create_drawing_tiles(self):
         # Calculate the number of lines for x and y
         number_of_lines_x = (1600 / 2) / 32
@@ -71,15 +79,13 @@ class DrawingTiles():
                 # Add the tile to the tile list
                 self.tile_list.append(tile)       
 
-    
     def draw_tiles(self):
         
         # For every tile in the tile list
         for tile in self.tile_list:
-            
+
             # Draw the appropriate image based on the palette number, at the correct x and y positions from the origin point
             self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], self.origin_point.y + tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
-
 
     def run(self):
 
