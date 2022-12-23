@@ -71,7 +71,7 @@ class DrawingTiles():
 
         # ----------------------------------------------------------------------------------------
         # Buttons
-
+        
         # Buttons group
         self.buttons_group = pygame.sprite.Group()
 
@@ -83,6 +83,8 @@ class DrawingTiles():
         self.buttons_group.add(self.extend_drawing_tiles_button)
         self.buttons_group.add(self.shrink_drawing_tiles_button)
         self.buttons_group.add(self.export_tile_map_button)
+
+        self.button_clicked_time = pygame.time.get_ticks() # Used to record when a button has been clicked
 
     def draw_grid(self):
 
@@ -106,30 +108,9 @@ class DrawingTiles():
         # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
         self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
 
-        for event in pygame.event.get():
-
-            # If the left mouse button was clicked (Single clicks)
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: 
-                # ----------------------------------------------------------------------------------------
-                # Collision with buttons
-
-                # If the mouse rect collides with the rect of the extend drawing tiles button
-                if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
-                    # Extend the drawing tiles by one column
-                    self.extend_drawing_tiles()
-                
-                # If the mouse rect collides with the rect of the shrink drawing tiles button
-                if self.mouse_rect.colliderect(self.shrink_drawing_tiles_button.rect):
-                    # Shrink the drawing tiles by one column
-                    self.shrink_drawing_tiles()
-
-                # If the mouse rect collides with the rect of the extend drawing tiles button
-                if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
-                    # Export the tile map
-                    self.export_tile_map()    
-
-        # If the left mouse button is held
+        # If the left mouse button is pressed
         if pygame.mouse.get_pressed()[0]:
+
             # ----------------------------------------------------------------------------------------
             # Changing the drawing tile
 
@@ -161,6 +142,29 @@ class DrawingTiles():
                     # Set the selected palette number to be the palette number of the palette tile that was clicked on
                     self.selected_palette_number = palette_tile.palette_number
 
+            # ----------------------------------------------------------------------------------------
+            # Collision with buttons
+
+            # If enough time has passed since the last time a button has been clicked
+            if pygame.time.get_ticks() - self.button_clicked_time > 500:
+
+                # If the mouse rect collides with the rect of the extend drawing tiles button
+                if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
+                    # Extend the drawing tiles by one column
+                    self.extend_drawing_tiles()
+                
+                # If the mouse rect collides with the rect of the shrink drawing tiles button
+                if self.mouse_rect.colliderect(self.shrink_drawing_tiles_button.rect):
+                    # Shrink the drawing tiles by one column
+                    self.shrink_drawing_tiles()
+
+                # If the mouse rect collides with the rect of the extend drawing tiles button
+                if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
+                    # Export the tile map
+                    self.export_tile_map()    
+
+                # Record the last time that a button was clicked to be now
+                self.button_clicked_time = pygame.time.get_ticks()
 
         # If the "a" key is being pressed
         if pygame.key.get_pressed()[pygame.K_a]:
@@ -243,8 +247,9 @@ class DrawingTiles():
             # For each row in the tile list
             for row in self.tile_list:
                 
-                # Remove the last item of the row
-                row.pop()
+                if len(row) > 0:
+                    # Remove the last item of the row
+                    row.pop()
 
     def export_tile_map(self):
         # List which will hold all the rows of items inside the tile map
