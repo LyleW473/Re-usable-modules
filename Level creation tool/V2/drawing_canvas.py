@@ -97,13 +97,32 @@ class DrawingTiles():
             pygame.draw.line(self.screen, "black", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 1)
 
     def handle_user_input(self):
+
         # Retrieve the mouse position
         self.mouse_position = pygame.mouse.get_pos()
 
         # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
         self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
 
-        # If the left mouse button is pressed
+        for event in pygame.event.get():
+
+            # If the left mouse button was clicked (Single clicks)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: 
+                print("clicked")
+                # ----------------------------------------------------------------------------------------
+                # Collision with buttons
+
+                # If the mouse rect collides with the rect of the extend drawing tiles button
+                if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
+                    # Extend the drawing tiles by one column
+                    self.extend_drawing_tiles()
+
+                # If the mouse rect collides with the rect of the extend drawing tiles button
+                if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
+                    # Export the tile map
+                    self.export_tile_map()    
+
+        # If the left mouse button is held
         if pygame.mouse.get_pressed()[0]:
             # ----------------------------------------------------------------------------------------
             # Changing the drawing tile
@@ -136,16 +155,6 @@ class DrawingTiles():
                     # Set the selected palette number to be the palette number of the palette tile that was clicked on
                     self.selected_palette_number = palette_tile.palette_number
 
-            # ----------------------------------------------------------------------------------------
-            # Collision with buttons
-
-            # If the mouse rect collides with the rect of the extend drawing tiles button
-            if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
-                self.extend_drawing_tiles()
-
-            # If the mouse rect collides with the rect of the extend drawing tiles button
-            if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
-                self.export_tile_map()
 
         # If the "a" key is being pressed
         if pygame.key.get_pressed()[pygame.K_a]:
