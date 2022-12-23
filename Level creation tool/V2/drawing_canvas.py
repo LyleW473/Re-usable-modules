@@ -3,16 +3,48 @@ from settings import *
 from pygame import transform as pyt
 from pygame import image as pyi
 
+class PaletteTile(pygame.sprite.Sprite):
+
+    def __init__(self, x, y, palette_number):
+        # Inherit from pygame's sprite class
+        pygame.sprite.Sprite.__init__(self)
+        # Set the image as the palette number
+        self.image = pyt.scale(pyi.load(f"V2/graphics/{palette_number}.png"), (64, 64))
+        # Set the palette number based on the palette number passed in
+        self.palette_number = palette_number
+        
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.screen = pygame.display.set_mode((screen_width, screen_height))
+
+    def draw(self):
+        # Draw the palette tile onto the screen
+        self.screen.blit(self.image, self.rect)
+
 # Create drawing tiles
 class DrawingTiles():
     def __init__(self):
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-
         self.origin_point = pygame.math.Vector2(0, 0) # The point where the drawing grid and tiles are drawn from
+        
+        # ----------------------------------------------------------------------------------------
+        # Palette tiles
+
+        # Number to represent what a tile is (All tiles are set to 0 by default)
+        self.palette_number = 0
+        # Palette tiles group
+        self.palette_tiles_group = pygame.sprite.Group()
+
+        # Create palette tiles
+        for i in range(0, 2 + 1):
+            # Create a new palette tile and add it to the palette tiles group
+            palette_tile = PaletteTile(50 + (100 * i), 600, i)
+            self.palette_tiles_group.add(palette_tile)
+
+        # ----------------------------------------------------------------------------------------
         # Drawing tiles
         self.tile_list = []
-        # Number to represent what a tile is
-        self.palette_number = 0
         # Set the size of the tiles
         self.tile_size = 32 
         # Create a tuple with all the images needed for the tiles
@@ -87,16 +119,23 @@ class DrawingTiles():
             # Draw the appropriate image based on the palette number, at the correct x and y positions from the origin point
             self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], self.origin_point.y + tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
 
+    def draw_palette_tiles(self):
+        # For every palette tile in the palette tiles group
+        for palette_tile in self.palette_tiles_group:
+            # Draw the palette tile onto the screen
+            palette_tile.draw()
+
     def run(self):
+
+        # Handle user input
+        self.handle_user_input()
 
         # Draw the tiles onto the screen
         self.draw_tiles()
 
         # Draw the grid
-        self.draw_grid()
+        self.draw_grid()    
 
-        # Handle user input
-        self.handle_user_input()
-
-
+        # Draw palette tiles
+        self.draw_palette_tiles()
 

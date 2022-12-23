@@ -134,7 +134,7 @@ class DrawingTiles():
 class PaletteTiles(pygame.sprite.Sprite):
     def __init__(self, image, x, y, palette_number):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.transform.scale(image, (100, 100))
+        self.image = pyt.scale(image, (100, 100))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
