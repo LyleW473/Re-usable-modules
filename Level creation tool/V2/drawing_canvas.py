@@ -110,14 +110,19 @@ class DrawingTiles():
             # Changing the drawing tile
 
             # Check for every tile inside the tile list
-            for tile in self.tile_list:
 
-                # If the mouse rect collides with the tile rect (tile[0] = tile rect, tile[1] = palette number )
-                if self.mouse_rect.colliderect(tile[0]):
-                    print(f"Clicked on {tile[0]}")
+            # For each row in the tile list
+            for row in self.tile_list:
 
-                    # Set the drawing tile's palette number to be the current selected palette tile number
-                    tile[1] = self.selected_palette_number
+                # For each item in each row
+                for tile in row:
+
+                    # If the mouse rect collides with the tile rect (tile[0] = tile rect, tile[1] = palette number )
+                    if self.mouse_rect.colliderect(tile[0]):
+                        print(f"Clicked on {tile[0]}")
+
+                        # Set the drawing tile's palette number to be the current selected palette tile number
+                        tile[1] = self.selected_palette_number
 
             # ----------------------------------------------------------------------------------------
             # Changing the palette tile selected
@@ -137,12 +142,10 @@ class DrawingTiles():
 
             # If the mouse rect collides with the rect of the extend drawing tiles button
             if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
-                print("Plus")
                 self.extend_drawing_tiles()
 
             # If the mouse rect collides with the rect of the extend drawing tiles button
             if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
-                print("Plus")
                 self.export_tile_map()
 
         # If the "a" key is being pressed
@@ -192,6 +195,10 @@ class DrawingTiles():
         number_of_lines_y = (900 / 2) / 32
 
         for row in range(0, int(number_of_lines_y)):
+            
+            # Reset the row of items list for every row
+            row_of_items_list = []
+
             for column in range(0, int(number_of_lines_x)):
 
                 # Create a rect, spacing them out between each other by the tile size
@@ -200,11 +207,19 @@ class DrawingTiles():
                 # Create a tile containing the rect and palette number (All palette numbers will be set to 0 by default)
                 tile = [rect, 0] 
 
-                # Add the tile to the tile list
-                self.tile_list.append(tile)       
+                # Add the tile to the row of items list
+                row_of_items_list.append(tile)   
+            
+            # Add the row of items list to the tile list
+            self.tile_list.append(row_of_items_list)
 
     def extend_drawing_tiles(self):
-        print("extend")
+
+        # For each row in the tile list
+        for row_count, row in enumerate(self.tile_list):
+
+            # Create a new tile with the palette value, 0, and add it to the end of the row
+            row.append([pygame.Rect( ( (len(row)  * self.tile_size), (row_count * self.tile_size), self.tile_size, self.tile_size)), 0])
 
     def export_tile_map(self):
         # Calculate the number of items in each row
@@ -240,10 +255,12 @@ class DrawingTiles():
     def draw_tiles(self):
         
         # For every tile in the tile list
-        for tile in self.tile_list:
+        for row in self.tile_list:
 
-            # Draw the appropriate image based on the palette number, at the correct x and y positions from the origin point
-            self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], self.origin_point.y + tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
+            for tile in row:
+
+                # Draw the appropriate image based on the palette number, at the correct x and y positions from the origin point
+                self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], self.origin_point.y + tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
 
     def draw_palette_tiles(self):
 
