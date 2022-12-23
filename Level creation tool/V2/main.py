@@ -1,5 +1,7 @@
 import pygame, sys
 from settings import *
+from drawing_canvas import DrawingTiles
+
 
 
 class Main:
@@ -10,7 +12,9 @@ class Main:
         pygame.init()
         pygame.display.set_caption("Level creator")
         self.screen = pygame.display.set_mode((screen_width, screen_height))
-        self.clock = pygame.time.Clock()
+        self.clock = pygame.time.Clock()    
+        self.drawing_canvas = DrawingTiles()
+
 
     def run(self):
 
@@ -24,7 +28,14 @@ class Main:
                     # Close the program
                     pygame.quit()
                     sys.exit()
-                
+
+            # -------------------------------------
+            # MAIN PROGRAM
+            self.screen.fill("dodgerblue4") 
+
+            # Run all of the drawing canvas methods
+            self.drawing_canvas.run()
+
             # -------------------------------------
             # Update display
             pygame.display.update() 
