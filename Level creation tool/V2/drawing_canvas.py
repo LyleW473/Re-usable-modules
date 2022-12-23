@@ -53,6 +53,9 @@ class DrawingTiles():
         # Create the initial drawing tiles
         self.create_drawing_tiles()
 
+        # Set mouse as not visible
+        pygame.mouse.set_visible(False)
+
     def draw_grid(self):
 
         # Calculate the number of lines for x and y
@@ -73,7 +76,6 @@ class DrawingTiles():
 
         # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
         self.mouse_rect = pygame.Rect((self.mouse_position[0], self.mouse_position[1], 20, 20))
-        pygame.draw.rect(self.screen, "red", self.mouse_rect)
 
         # If the left mouse button is pressed
         if pygame.mouse.get_pressed()[0]:
@@ -86,7 +88,7 @@ class DrawingTiles():
                 # If the mouse rect collides with the tile rect (tile[0] = tile rect, tile[1] = palette number )
                 if self.mouse_rect.colliderect(tile[0]):
                     print(f"Clicked on {tile[0]}")
-                    
+
                     # Set the drawing tile's palette number to be the current selected palette tile number
                     tile[1] = self.selected_palette_number
 
@@ -115,6 +117,15 @@ class DrawingTiles():
         elif pygame.key.get_pressed()[pygame.K_d]:
             # Move the origin point left
             self.origin_point.x -= 5
+
+    def set_new_cursor(self):
+        # Draw a circle where the mouse cursor is
+        pygame.draw.circle(self.screen, "white", (self.mouse_position[0], self.mouse_position[1]), 15, 15) # Body
+        pygame.draw.circle(self.screen, "deepskyblue3", (self.mouse_position[0], self.mouse_position[1]), 15, 3) # Outline 1
+        pygame.draw.circle(self.screen, "black", (self.mouse_position[0], self.mouse_position[1]), 15, 1) # Outline 2 
+
+        # Draw the palette tile selected in the middle of the circle
+        self.screen.blit(pyt.scale(pyi.load(f"V2/graphics/{self.selected_palette_number}.png"), (20, 20)), (self.mouse_position[0] - (20 / 2), self.mouse_position[1] - (20 / 2) ) )
 
     def create_drawing_tiles(self):
         # Calculate the number of lines for x and y
@@ -149,9 +160,6 @@ class DrawingTiles():
 
     def run(self):
 
-        # Handle user input
-        self.handle_user_input()
-
         # Draw the tiles onto the screen
         self.draw_tiles()
 
@@ -161,3 +169,8 @@ class DrawingTiles():
         # Draw palette tiles
         self.draw_palette_tiles()
 
+        # Handle user input
+        self.handle_user_input()
+
+        # Set the cursor image to be the image of the selected palette tile
+        self.set_new_cursor()

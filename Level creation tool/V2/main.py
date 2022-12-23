@@ -31,7 +31,7 @@ class Main:
 
             # -------------------------------------
             # MAIN PROGRAM
-            self.screen.fill("dodgerblue4") 
+            self.screen.fill("gray17") 
 
             # Run all of the drawing canvas methods
             self.drawing_canvas.run()
