@@ -12,7 +12,7 @@ class PaletteTile(pygame.sprite.Sprite):
         self.image = pyt.scale(pyi.load(f"V2/graphics/{palette_number}.png"), (64, 64))
         # Set the palette number based on the palette number passed in
         self.palette_number = palette_number
-        
+
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -31,8 +31,9 @@ class DrawingTiles():
         # ----------------------------------------------------------------------------------------
         # Palette tiles
 
-        # Number to represent what a tile is (All tiles are set to 0 by default)
-        self.palette_number = 0
+        # Number to represent what tile the user has selected right now
+        self.selected_palette_number = 0
+
         # Palette tiles group
         self.palette_tiles_group = pygame.sprite.Group()
 
@@ -76,12 +77,33 @@ class DrawingTiles():
 
         # If the left mouse button is pressed
         if pygame.mouse.get_pressed()[0]:
+            # ----------------------------------------------------------------------------------------
+            # Changing the drawing tile
+
             # Check for every tile inside the tile list
             for tile in self.tile_list:
 
                 # If the mouse rect collides with the tile rect (tile[0] = tile rect, tile[1] = palette number )
                 if self.mouse_rect.colliderect(tile[0]):
                     print(f"Clicked on {tile[0]}")
+                    
+                    # Set the drawing tile's palette number to be the current selected palette tile number
+                    tile[1] = self.selected_palette_number
+
+            # ----------------------------------------------------------------------------------------
+            # Changing the palette tile selected
+
+            # Check every palette tile in the palette tile group
+            for palette_tile in self.palette_tiles_group:
+
+                # If the mouse rect collides with the palette tile's rect
+                if self.mouse_rect.colliderect(palette_tile.rect):
+                    print(f"Clicked on {palette_tile}, palette_number = {palette_tile.palette_number}")
+
+                    # Set the selected palette number to be the palette number of the palette tile that was clicked on
+                    self.selected_palette_number = palette_tile.palette_number
+
+
 
 
         # If the "a" key is being pressed
@@ -105,8 +127,8 @@ class DrawingTiles():
                 # Create a rect, spacing them out between each other by the tile size
                 rect = pygame.Rect((row * self.tile_size), (column * self.tile_size), self.tile_size, self.tile_size)
 
-                # Create a tile containing the rect and the palette number (the palette number will be changed later on)
-                tile = [rect, self.palette_number] 
+                # Create a tile containing the rect and palette number (All palette numbers will be set to 0 by default)
+                tile = [rect, 0] 
 
                 # Add the tile to the tile list
                 self.tile_list.append(tile)       
