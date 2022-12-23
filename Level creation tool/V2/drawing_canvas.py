@@ -82,7 +82,6 @@ class DrawingTiles():
         self.buttons_group.add(self.extend_drawing_tiles_button)
         self.buttons_group.add(self.export_tile_map_button)
 
-
     def draw_grid(self):
 
         # Calculate the number of lines for x and y
@@ -222,24 +221,22 @@ class DrawingTiles():
             row.append([pygame.Rect( ( (len(row)  * self.tile_size), (row_count * self.tile_size), self.tile_size, self.tile_size)), 0])
 
     def export_tile_map(self):
-        # Calculate the number of items in each row
-        number_of_items_in_row = int((1600 / 2) / 32)
-        # Calculate the number of rows there are
-        number_of_rows = int((900 / 2) / 32)
         # List which will hold all the rows of items inside the tile map
         export_list = []
 
-        # Do this "number of rows" times
-        for i in range(0, number_of_rows):
+        # For each row in the tile list
+        for row_count, row in enumerate(self.tile_list):
 
-            # Create an empty row of items list
+            # Create a new row of items list
             row_of_items_list = []
 
-            for j in range(0, number_of_items_in_row):
-                # Add the e.g. (25 + 1)th item to the row of items list
-                row_of_items_list.append(self.tile_list[(i * number_of_items_in_row) + j][1])
+            # For all items in the row
+            for i in range(0, len(row)):
 
-            # Add the row of items list into the export list
+                # Add the palette number of the tile to the row of items list
+                row_of_items_list.append(self.tile_list[row_count][i][1])
+
+            # Add the row of items list to the export list
             export_list.append(row_of_items_list)
 
         # Print / Return the tile map
