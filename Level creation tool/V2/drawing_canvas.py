@@ -76,7 +76,11 @@ class DrawingTiles():
         self.buttons_group = pygame.sprite.Group()
 
         self.extend_drawing_tiles_button = Button(1500, 460, pyi.load("V2/graphics/extend_button.png"))
+        self.export_tile_map_button = Button(1500, 560, pyi.load("V2/graphics/export_button.png"))
+
+        # Add the buttons into the buttons group
         self.buttons_group.add(self.extend_drawing_tiles_button)
+        self.buttons_group.add(self.export_tile_map_button)
 
 
     def draw_grid(self):
@@ -135,7 +139,11 @@ class DrawingTiles():
             if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
                 print("Plus")
                 self.extend_drawing_tiles()
-            
+
+            # If the mouse rect collides with the rect of the extend drawing tiles button
+            if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
+                print("Plus")
+                self.export_tile_map()
 
         # If the "a" key is being pressed
         if pygame.key.get_pressed()[pygame.K_a]:
@@ -183,11 +191,11 @@ class DrawingTiles():
         number_of_lines_x = (1600 / 2) / 32
         number_of_lines_y = (900 / 2) / 32
 
-        for row in range(0, int(number_of_lines_x)):
-            for column in range(0, int(number_of_lines_y)):
+        for row in range(0, int(number_of_lines_y)):
+            for column in range(0, int(number_of_lines_x)):
 
                 # Create a rect, spacing them out between each other by the tile size
-                rect = pygame.Rect((row * self.tile_size), (column * self.tile_size), self.tile_size, self.tile_size)
+                rect = pygame.Rect((column * self.tile_size), (row * self.tile_size), self.tile_size, self.tile_size)
 
                 # Create a tile containing the rect and palette number (All palette numbers will be set to 0 by default)
                 tile = [rect, 0] 
@@ -198,12 +206,36 @@ class DrawingTiles():
     def extend_drawing_tiles(self):
         print("extend")
 
+    def export_tile_map(self):
+        # Calculate the number of items in each row
+        number_of_items_in_row = int((1600 / 2) / 32)
+        # Calculate the number of rows there are
+        number_of_rows = int((900 / 2) / 32)
+        # List which will hold all the rows of items inside the tile map
+        export_list = []
+
+        # Do this "number of rows" times
+        for i in range(0, number_of_rows):
+
+            # Create an empty row of items list
+            row_of_items_list = []
+
+            for j in range(0, number_of_items_in_row):
+                # Add the e.g. (25 + 1)th item to the row of items list
+                row_of_items_list.append(self.tile_list[(i * number_of_items_in_row) + j][1])
+
+            # Add the row of items list into the export list
+            export_list.append(row_of_items_list)
+
+        # Print / Return the tile map
+        print(export_list)
+
     def draw_buttons(self):
 
         # For every button in the buttons group
-        for button in self.buttons_group:
-            # Draw the button onto the screen (Always drawn at ())
-            button.draw(1500, 460)
+        for i, button in enumerate(self.buttons_group):
+            # Draw the button onto the screen
+            button.draw(1500, 460 + (i * 100))
 
     def draw_tiles(self):
         
