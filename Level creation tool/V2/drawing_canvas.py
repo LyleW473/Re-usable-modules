@@ -23,12 +23,27 @@ class PaletteTile(pygame.sprite.Sprite):
         # Note: These co-ordinates are passed into the method because I want the images to stay at the same position on the screen, but for the rect to move
         self.screen.blit(self.image, (x, y))
 
-# Create drawing tiles
+class Button(pygame.sprite.Sprite):
+    def __init__(self, x, y, image):
+        # Inherit from pygame's sprite class
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pyt.scale(image, (64, 64)) # Scale all buttons to this size
+        self.rect = self.image.get_rect()
+        self.rect.x = x 
+        self.rect.y = y
+        self.screen = pygame.display.set_mode((screen_width, screen_height))
+
+    def draw(self, x, y):
+        self.screen.blit(self.image, (x, y))
+    
 class DrawingTiles():
     def __init__(self):
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         self.origin_point = pygame.math.Vector2(0, 0) # The point where the drawing grid and tiles are drawn from
         
+        # Set mouse as not visible
+        pygame.mouse.set_visible(False)
+
         # ----------------------------------------------------------------------------------------
         # Palette tiles
 
@@ -54,8 +69,15 @@ class DrawingTiles():
         # Create the initial drawing tiles
         self.create_drawing_tiles()
 
-        # Set mouse as not visible
-        pygame.mouse.set_visible(False)
+        # ----------------------------------------------------------------------------------------
+        # Buttons
+
+        # Buttons group
+        self.buttons_group = pygame.sprite.Group()
+
+        self.extend_drawing_tiles_button = Button(1500, 460, pyi.load("V2/graphics/extend_button.png"))
+        self.buttons_group.add(self.extend_drawing_tiles_button)
+
 
     def draw_grid(self):
 
@@ -106,6 +128,15 @@ class DrawingTiles():
                     # Set the selected palette number to be the palette number of the palette tile that was clicked on
                     self.selected_palette_number = palette_tile.palette_number
 
+            # ----------------------------------------------------------------------------------------
+            # Collision with buttons
+
+            # If the mouse rect collides with the rect of the extend drawing tiles button
+            if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
+                print("Plus")
+                self.extend_drawing_tiles()
+            
+
         # If the "a" key is being pressed
         if pygame.key.get_pressed()[pygame.K_a]:
 
@@ -116,7 +147,11 @@ class DrawingTiles():
             for palette_tile in self.palette_tiles_group:
                 # Move the palette tile rect left 
                 palette_tile.rect.x -= 5
-                
+
+            # For every button in the buttons group
+            for button in self.buttons_group:
+                # Move the button rect left
+                button.rect.x -= 5
 
         # If the "d" key is being pressed
         elif pygame.key.get_pressed()[pygame.K_d]:
@@ -129,6 +164,10 @@ class DrawingTiles():
                 # Move the palette tile rect right
                 palette_tile.rect.x += 5
 
+            # For every button in the buttons group
+            for button in self.buttons_group:
+                # Move the button rect right
+                button.rect.x += 5
 
     def set_new_cursor(self):
         # Draw a circle where the mouse cursor is
@@ -156,6 +195,16 @@ class DrawingTiles():
                 # Add the tile to the tile list
                 self.tile_list.append(tile)       
 
+    def extend_drawing_tiles(self):
+        print("extend")
+
+    def draw_buttons(self):
+
+        # For every button in the buttons group
+        for button in self.buttons_group:
+            # Draw the button onto the screen (Always drawn at ())
+            button.draw(1500, 460)
+
     def draw_tiles(self):
         
         # For every tile in the tile list
@@ -181,6 +230,9 @@ class DrawingTiles():
 
         # Draw palette tiles
         self.draw_palette_tiles()
+
+        # Draw buttons
+        self.draw_buttons()
 
         # Handle user input
         self.handle_user_input()
