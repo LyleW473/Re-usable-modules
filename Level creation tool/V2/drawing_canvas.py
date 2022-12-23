@@ -1,35 +1,38 @@
 import pygame, sys
 from settings import *
+from pygame import transform as pyt
+from pygame import image as pyi
 
 # Create drawing tiles
 class DrawingTiles():
     def __init__(self):
         self.screen = pygame.display.set_mode((screen_width, screen_height))
 
+        self.origin_point = pygame.math.Vector2(0, 0) # The point where the drawing grid and tiles are drawn from
         # Drawing tiles
         self.tile_list = []
-        self.palette_number = 0 # Determines what image the drawing tile will display 
-        
-        # Exporting tile creation
-        self.export_tile_list = [] 
-
-        self.origin_point = pygame.math.Vector2(0, 0)
-
-        self.tile_size = 32
- 
+        # Number to represent what a tile is
+        self.palette_number = 0
+        # Set the size of the tiles
+        self.tile_size = 32 
+        # Create a tuple with all the images needed for the tiles
+        self.image = ( pyt.scale(pyi.load("V2/graphics/empty.png"), (32, 32)), pyt.scale(pyi.load("V2/graphics/1.png"), (32, 32)) , pyt.scale(pyi.load("V2/graphics/2.png"), (32, 32)) )
+        # Create the initial drawing tiles
+        self.create_drawing_tiles()
 
     def draw_grid(self):
 
-        #pygame.draw.line(self.screen, "black", (0, 900 / 2), (screen_width, 900 / 2))
-
+        # Calculate the number of lines for x and y
         number_of_lines_x = (1600 / 2) / 32
-        number_of_lines_y = (928 / 2) / 32
+        number_of_lines_y = (900 / 2) / 32
 
+        # Vertical lines
         for i in range(1, int(number_of_lines_x) + 1):
-            pygame.draw.line(self.screen, "red", (self.origin_point.x + (i * 64), 0), (self.origin_point.x + (i * 64), 900 / 2), 1)
+            pygame.draw.line(self.screen, "white", (self.origin_point.x + (i * 32), 0), (self.origin_point.x + (i * 32), 896 / 2), 1)
 
+        # Horizontal lines
         for j in range(1, int(number_of_lines_y) + 1):
-            pygame.draw.line(self.screen, "white", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 1)
+            pygame.draw.line(self.screen, "black", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 1)
 
 
     def handle_user_input(self):
@@ -51,28 +54,40 @@ class DrawingTiles():
             self.origin_point.x -= 5
         
         
-    # def create_drawing_tiles(self, number_of_lines, tile_size):
-    #     for row in range(0, number_of_lines):
-    #         for column in range(0, number_of_lines):
-    #             # Create a rect, spacing them out between each other by the tile size
-    #             rect = pygame.Rect(250 + (column * tile_size), 250 + (row * tile_size), tile_size, tile_size)
-    #             # Create a tile containing the rect and the palette number (the palette number will be changed later on)
-    #             tile = [rect, self.palette_number] 
-    #             # Add the tile to the tile list
-    #             self.tile_list.append(tile)       
+    def create_drawing_tiles(self):
+        # Calculate the number of lines for x and y
+        number_of_lines_x = (1600 / 2) / 32
+        number_of_lines_y = (900 / 2) / 32
 
-    #     # For every tile in the tile list
-    #     for tile in self.tile_list:
-    #         # Draw the appropriate image based on the palette number, at the correct x and y positions
-    #         self.screen.blit(self.image[tile[1]], (tile[0][0], tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
+        for row in range(0, int(number_of_lines_x)):
+            for column in range(0, int(number_of_lines_y)):
+
+                # Create a rect, spacing them out between each other by the tile size
+                rect = pygame.Rect((row * self.tile_size), (column * self.tile_size), self.tile_size, self.tile_size)
+
+                # Create a tile containing the rect and the palette number (the palette number will be changed later on)
+                tile = [rect, self.palette_number] 
+
+                # Add the tile to the tile list
+                self.tile_list.append(tile)       
+
+    
+    def draw_tiles(self):
+        
+        # For every tile in the tile list
+        for tile in self.tile_list:
+            
+            # Draw the appropriate image based on the palette number, at the correct x and y positions from the origin point
+            self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], self.origin_point.y + tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
 
 
     def run(self):
-        print(self.origin_point)
+
+        # Draw the tiles onto the screen
+        self.draw_tiles()
+
         # Draw the grid
         self.draw_grid()
-
-        # self.create_drawing_tiles()
 
         # Handle user input
         self.handle_user_input()
