@@ -76,10 +76,12 @@ class DrawingTiles():
         self.buttons_group = pygame.sprite.Group()
 
         self.extend_drawing_tiles_button = Button(1500, 460, pyi.load("V2/graphics/extend_button.png"))
-        self.export_tile_map_button = Button(1500, 560, pyi.load("V2/graphics/export_button.png"))
+        self.shrink_drawing_tiles_button = Button(1500, 560, pyi.load("V2/graphics/shrink_button.png"))
+        self.export_tile_map_button = Button(1500, 660, pyi.load("V2/graphics/export_button.png"))
 
         # Add the buttons into the buttons group
         self.buttons_group.add(self.extend_drawing_tiles_button)
+        self.buttons_group.add(self.shrink_drawing_tiles_button)
         self.buttons_group.add(self.export_tile_map_button)
 
     def draw_grid(self):
@@ -108,7 +110,6 @@ class DrawingTiles():
 
             # If the left mouse button was clicked (Single clicks)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: 
-                print("clicked")
                 # ----------------------------------------------------------------------------------------
                 # Collision with buttons
 
@@ -116,6 +117,11 @@ class DrawingTiles():
                 if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
                     # Extend the drawing tiles by one column
                     self.extend_drawing_tiles()
+                
+                # If the mouse rect collides with the rect of the shrink drawing tiles button
+                if self.mouse_rect.colliderect(self.shrink_drawing_tiles_button.rect):
+                    # Shrink the drawing tiles by one column
+                    self.shrink_drawing_tiles()
 
                 # If the mouse rect collides with the rect of the extend drawing tiles button
                 if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
@@ -228,6 +234,17 @@ class DrawingTiles():
 
             # Create a new tile with the palette value, 0, and add it to the end of the row
             row.append([pygame.Rect( ( (len(row)  * self.tile_size), (row_count * self.tile_size), self.tile_size, self.tile_size)), 0])
+   
+    def shrink_drawing_tiles(self):
+        
+        # If the tile list isn't empty
+        if len(self.tile_list) > 0:
+
+            # For each row in the tile list
+            for row in self.tile_list:
+                
+                # Remove the last item of the row
+                row.pop()
 
     def export_tile_map(self):
         # List which will hold all the rows of items inside the tile map
