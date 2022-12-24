@@ -1,4 +1,4 @@
-import pygame, sys, os
+import pygame, os
 from settings import *
 from pygame import transform as pyt
 from pygame import image as pyi
@@ -69,8 +69,19 @@ class DrawingTiles():
         # Create a tuple with all the images needed for the tiles
         self.image = self.load_tile_images()
 
-        # Create the initial drawing tiles
-        self.create_drawing_tiles()
+        # If the text file that stores all of the existing tile maps created is greater than 0 (It means there is at least one tile map inside)
+        if os.path.getsize("V2/existing_tile_maps.txt") > 0:
+            
+            # Open the existing tile maps file 
+            with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+
+                # Load an existing tile map
+                self.load_existing_tile_map(existing_tile_maps_file)
+        
+        # If there are no existing tile maps, create a new default tile map
+        else:
+            # Create the initial drawing tiles
+            self.create_drawing_tiles()
 
         # ----------------------------------------------------------------------------------------
         # Buttons
@@ -84,6 +95,65 @@ class DrawingTiles():
     # ----------------------------------------------------------------------------------------
     # Initial set-up methods
 
+    def load_existing_tile_map(self, existing_tile_maps_file):
+
+        # Save the contents of the existing_tile_maps file to this variable
+        string_tile_list = existing_tile_maps_file.read()
+
+        # ----------------------------------------------------------------------------------------
+        # Cleaning the string
+
+        # Remove the first and last 2 brackets
+        string_tile_list = string_tile_list[2:-2]
+
+        # After each sublist, separate them using a #
+        string_tile_list = string_tile_list.replace("], [", "#")
+
+        # Separate each item in each sub list with an exclamation mark (this is because some tiles may have double digit palette numbers)
+        string_tile_list = string_tile_list.replace(", ", "!")
+
+        # Create lists of strings containing the tile numbers
+        string_tile_list = string_tile_list.split("#")
+
+        # Create a new string tile list
+        new_string_tile_list = []
+
+        # ----------------------------------------------------------------------------------------
+        # Converting back into a list (each digit is still a string, but this will be converted to an integer later)
+
+        # For each sub list in the string tile list
+        for sub_list in string_tile_list:
+
+            # Create a new sub list splitting each sublist wherever there is an exclamation mark
+            new_sub_list = sub_list.split("!")
+
+            # Add the new sub list to the new string tile list
+            new_string_tile_list.append(new_sub_list)
+       
+        # ----------------------------------------------------------------------------------------
+        # Converting back into a tile list of rectangles (The actual tile map)
+
+        # For each row in the new string tile list
+        for row_index, row in enumerate(new_string_tile_list):
+    
+            # Reset the row of items list for every row
+            row_of_items_list = []  
+
+            # For each item in the row
+            for item_count, item in enumerate(row):
+                    
+                # Create a rect, spacing them out between each other by the tile size
+                rect = pygame.Rect((item_count * self.tile_size), (row_index * self.tile_size), self.tile_size, self.tile_size)
+
+                # Create a tile containing the rect and palette number of the item, converting the item into an int (as it should be a string at this stage)
+                tile = [rect, int(item)]
+
+                # Add the tile to the row of items list
+                row_of_items_list.append(tile)
+
+            # Add the row of items list to the tile list
+            self.tile_list.append(row_of_items_list)
+            
     def load_tile_images(self):
 
         # Find out the number of images in the following directory 
@@ -188,7 +258,7 @@ class DrawingTiles():
                     # Remove the last item of the row
                     row.pop()
 
-    def export_tile_map(self):
+    def export_and_save_tile_map(self):
         # List which will hold all the rows of items inside the tile map
         export_list = []
 
@@ -207,8 +277,12 @@ class DrawingTiles():
             # Add the row of items list to the export list
             export_list.append(row_of_items_list)
 
-        # Print / Return the tile map
+        # Print the tile map in the terminal (for copy-paste methods)
         print(export_list)
+        
+        # Open the existing tile maps and append the current list of tiles (only palette numbers)
+        with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
+            existing_tile_maps_file.write(str(export_list))
 
     def reset_tile_map(self):
         # For each row in the tile list
@@ -296,7 +370,7 @@ class DrawingTiles():
                 # If the mouse rect collides with the rect of the export tile map button
                 if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
                     # Export the tile map
-                    self.export_tile_map()    
+                    self.export_and_save_tile_map()    
 
                 # If the mouse rect collides with the rect of the reset tile map button
                 if self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
@@ -355,7 +429,7 @@ class DrawingTiles():
             button.draw(1500, 460 + (i * 100))
 
     def draw_tiles(self):
-        
+
         # For every row in the tile list
         for row in self.tile_list:
 
