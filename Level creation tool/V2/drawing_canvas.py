@@ -91,16 +91,16 @@ class DrawingTiles():
     def draw_grid(self):
 
         # Calculate the number of lines for x and y
-        number_of_lines_x = (1600 / 2) / 32
+        number_of_lines_x = 1600 / 32
         number_of_lines_y = (900 / 2) / 32
 
         # Vertical lines
         for i in range(1, int(number_of_lines_x) + 1):
-            pygame.draw.line(self.screen, "white", (self.origin_point.x + (i * 32), 0), (self.origin_point.x + (i * 32), 896 / 2), 1)
+            pygame.draw.line(self.screen, "white", ((i * 32), 0), ((i * 32), 896 / 2), 2)
 
         # Horizontal lines
         for j in range(1, int(number_of_lines_y) + 1):
-            pygame.draw.line(self.screen, "black", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 1)
+            pygame.draw.line(self.screen, "white", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 2)
 
     def handle_user_input(self):
 
@@ -173,37 +173,37 @@ class DrawingTiles():
                 # Record the last time that a button was clicked to be now
                 self.button_clicked_time = pygame.time.get_ticks()
 
-        # If the "a" key is being pressed
-        if pygame.key.get_pressed()[pygame.K_a]:
+        # If the "a" key is being pressed and we aren't trying to go left, beyond the origin point
+        if pygame.key.get_pressed()[pygame.K_a] and self.origin_point.x < 0:
 
             # Move the origin point right
-            self.origin_point.x += 5
+            self.origin_point.x += self.tile_size
 
             # For each palette tile in the palette tiles group
             for palette_tile in self.palette_tiles_group:
                 # Move the palette tile rect left 
-                palette_tile.rect.x -= 5
+                palette_tile.rect.x -= self.tile_size
 
             # For every button in the buttons group
             for button in self.buttons_group:
                 # Move the button rect left
-                button.rect.x -= 5
+                button.rect.x -= self.tile_size
 
         # If the "d" key is being pressed
         elif pygame.key.get_pressed()[pygame.K_d]:
             
             # Move the origin point left
-            self.origin_point.x -= 5
+            self.origin_point.x -= self.tile_size
 
             # For each palette tile in the palette tiles group
             for palette_tile in self.palette_tiles_group:
                 # Move the palette tile rect right
-                palette_tile.rect.x += 5
+                palette_tile.rect.x += self.tile_size
 
             # For every button in the buttons group
             for button in self.buttons_group:
                 # Move the button rect right
-                button.rect.x += 5
+                button.rect.x += self.tile_size
 
     def set_new_cursor(self):
         # Draw a circle where the mouse cursor is
