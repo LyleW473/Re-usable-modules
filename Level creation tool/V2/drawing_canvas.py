@@ -9,7 +9,7 @@ class PaletteTile(pygame.sprite.Sprite):
         # Inherit from pygame's sprite class
         pygame.sprite.Sprite.__init__(self)
         # Set the image as the palette number
-        self.image = pyt.scale(pyi.load(f"V2/graphics/{palette_number}.png"), (64, 64))
+        self.image = pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{palette_number}.png"), (64, 64))
         # Set the palette number based on the palette number passed in
         self.palette_number = palette_number
 
@@ -65,7 +65,7 @@ class DrawingTiles():
         # Set the size of the tiles
         self.tile_size = 32 
         # Create a tuple with all the images needed for the tiles
-        self.image = ( pyt.scale(pyi.load("V2/graphics/empty.png"), (32, 32)), pyt.scale(pyi.load("V2/graphics/1.png"), (32, 32)) , pyt.scale(pyi.load("V2/graphics/2.png"), (32, 32)) )
+        self.image = ( pyt.scale(pyi.load("V2/graphics/palette_tiles/empty.png"), (32, 32)), pyt.scale(pyi.load("V2/graphics/palette_tiles/1.png"), (32, 32)) , pyt.scale(pyi.load("V2/graphics/palette_tiles/2.png"), (32, 32)) )
         # Create the initial drawing tiles
         self.create_drawing_tiles()
 
@@ -75,10 +75,10 @@ class DrawingTiles():
         # Buttons group
         self.buttons_group = pygame.sprite.Group()
 
-        self.extend_drawing_tiles_button = Button(1500, 460, pyi.load("V2/graphics/extend_button.png"))
-        self.shrink_drawing_tiles_button = Button(1500, 560, pyi.load("V2/graphics/shrink_button.png"))
-        self.export_tile_map_button = Button(1500, 660, pyi.load("V2/graphics/export_button.png"))
-        self.reset_tile_map_button = Button(1500, 760, pyi.load("V2/graphics/reset_button.png"))
+        self.extend_drawing_tiles_button = Button(1500, 460, pyi.load("V2/graphics/buttons/extend_button.png"))
+        self.shrink_drawing_tiles_button = Button(1500, 560, pyi.load("V2/graphics/buttons/shrink_button.png"))
+        self.export_tile_map_button = Button(1500, 660, pyi.load("V2/graphics/buttons/export_button.png"))
+        self.reset_tile_map_button = Button(1500, 760, pyi.load("V2/graphics/buttons/reset_button.png"))
 
         # Add the buttons into the buttons group
         self.buttons_group.add(self.extend_drawing_tiles_button)
@@ -212,7 +212,7 @@ class DrawingTiles():
         pygame.draw.circle(self.screen, "black", (self.mouse_position[0], self.mouse_position[1]), 15, 1) # Outline 2 
 
         # Draw the palette tile selected in the middle of the circle
-        self.screen.blit(pyt.scale(pyi.load(f"V2/graphics/{self.selected_palette_number}.png"), (20, 20)), (self.mouse_position[0] - (20 / 2), self.mouse_position[1] - (20 / 2) ) )
+        self.screen.blit(pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{self.selected_palette_number}.png"), (20, 20)), (self.mouse_position[0] - (20 / 2), self.mouse_position[1] - (20 / 2) ) )
 
     def create_drawing_tiles(self):
         # Calculate the number of lines for x and y
