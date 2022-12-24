@@ -96,8 +96,8 @@ class DrawingTiles():
     def draw_grid(self):
 
         # Calculate the number of lines for x and y
-        number_of_lines_x = 1600 / 32
-        number_of_lines_y = (900 / 2) / 32
+        number_of_lines_x = screen_width / 32
+        number_of_lines_y = (screen_height / 2) / 32
 
         # Vertical lines
         for i in range(1, int(number_of_lines_x) + 1):
@@ -224,8 +224,8 @@ class DrawingTiles():
 
     def create_drawing_tiles(self):
         # Calculate the number of lines for x and y
-        number_of_lines_x = (1600 / 2) / 32
-        number_of_lines_y = (900 / 2) / 32
+        number_of_lines_x = (screen_width / 2) / 32
+        number_of_lines_y = (screen_height / 2) / 32
 
         for row in range(0, int(number_of_lines_y)):
             
