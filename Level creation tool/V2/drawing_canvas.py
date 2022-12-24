@@ -78,11 +78,13 @@ class DrawingTiles():
         self.extend_drawing_tiles_button = Button(1500, 460, pyi.load("V2/graphics/extend_button.png"))
         self.shrink_drawing_tiles_button = Button(1500, 560, pyi.load("V2/graphics/shrink_button.png"))
         self.export_tile_map_button = Button(1500, 660, pyi.load("V2/graphics/export_button.png"))
+        self.reset_tile_map_button = Button(1500, 760, pyi.load("V2/graphics/reset_button.png"))
 
         # Add the buttons into the buttons group
         self.buttons_group.add(self.extend_drawing_tiles_button)
         self.buttons_group.add(self.shrink_drawing_tiles_button)
         self.buttons_group.add(self.export_tile_map_button)
+        self.buttons_group.add(self.reset_tile_map_button)
 
         self.button_clicked_time = pygame.time.get_ticks() # Used to record when a button has been clicked
 
@@ -158,10 +160,15 @@ class DrawingTiles():
                     # Shrink the drawing tiles by one column
                     self.shrink_drawing_tiles()
 
-                # If the mouse rect collides with the rect of the extend drawing tiles button
+                # If the mouse rect collides with the rect of the export tile map button
                 if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
                     # Export the tile map
                     self.export_tile_map()    
+
+                # If the mouse rect collides with the rect of the reset tile map button
+                if self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
+                    # Reset the tile map
+                    self.reset_tile_map()    
 
                 # Record the last time that a button was clicked to be now
                 self.button_clicked_time = pygame.time.get_ticks()
@@ -272,6 +279,14 @@ class DrawingTiles():
 
         # Print / Return the tile map
         print(export_list)
+
+    def reset_tile_map(self):
+        # For each row in the tile list
+        for row in self.tile_list:
+            # For each tile in each row
+            for tile in row:
+                # Set the palette number to 0
+                tile[1] = 0
 
     def draw_buttons(self):
 
