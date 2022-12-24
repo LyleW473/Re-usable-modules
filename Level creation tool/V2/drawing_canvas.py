@@ -160,7 +160,7 @@ class DrawingTiles():
 
             # Set/ create a new attribute e.g. self.export__tile_map_button, self.extend_drawing_tiles_button, etc.
             setattr(self, f"{list_of_buttons[i][:-4]}", Button(1500, 460 + (100 * i), pyi.load(f"V2/graphics/buttons/{list_of_buttons[i]}")) ) # [:-4] removes the ".png" from the attribute name
-            
+
             # Add the new attribute that was just created to the buttons group
             self.buttons_group.add(self.__getattribute__(list_of_buttons[i][:-4]))
         
@@ -386,12 +386,21 @@ class DrawingTiles():
             # Increment i index
             i += 1
 
+    def draw_tiles_menu(self):
+        # Body
+        pygame.draw.rect(self.screen, "gray20", (25, 475, 1425, 400))
+        # Outline
+        pygame.draw.rect(self.screen, "white", (25, 475, 1425, 400), 5)
+
     def run(self):
 
         # Draw the grid
         self.draw_grid() 
 
-        # Draw the tiles onto the screen
+        # Draw the tiles menu
+        self.draw_tiles_menu()
+
+        # Draw the tiles
         self.draw_tiles()   
 
         # Draw palette tiles
