@@ -44,6 +44,11 @@ class DrawingTiles():
         # Set mouse as not visible
         pygame.mouse.set_visible(False)
 
+        # Create a transparency surface for the grid to be drawn onto
+        self.transparency_surface = pygame.Surface((screen_width, screen_height))
+        # Set the alpha level
+        self.transparency_surface.set_alpha(75)
+
         # ----------------------------------------------------------------------------------------
         # Palette tiles
 
@@ -96,11 +101,14 @@ class DrawingTiles():
 
         # Vertical lines
         for i in range(1, int(number_of_lines_x) + 1):
-            pygame.draw.line(self.screen, "white", ((i * 32), 0), ((i * 32), 896 / 2), 2)
+            pygame.draw.line(self.transparency_surface, "white", ((i * 32), 0), ((i * 32), 896 / 2), 2)
 
         # Horizontal lines
         for j in range(1, int(number_of_lines_y) + 1):
-            pygame.draw.line(self.screen, "white", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 2)
+            pygame.draw.line(self.transparency_surface, "white", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 2)
+
+        # Draw the transparency surface onto the main surface / screen
+        self.screen.blit(self.transparency_surface, (0, 0))
 
     def handle_user_input(self):
 
@@ -314,11 +322,11 @@ class DrawingTiles():
 
     def run(self):
 
-        # Draw the tiles onto the screen
-        self.draw_tiles()
-
         # Draw the grid
-        self.draw_grid()    
+        self.draw_grid() 
+
+        # Draw the tiles onto the screen
+        self.draw_tiles()   
 
         # Draw palette tiles
         self.draw_palette_tiles()
