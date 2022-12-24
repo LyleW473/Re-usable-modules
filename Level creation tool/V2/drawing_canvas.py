@@ -75,21 +75,11 @@ class DrawingTiles():
         # ----------------------------------------------------------------------------------------
         # Buttons
         
-        # Buttons group
-        self.buttons_group = pygame.sprite.Group()
+        # Create buttons
+        self.create_buttons()
 
-        self.extend_drawing_tiles_button = Button(1500, 460, pyi.load("V2/graphics/buttons/extend_button.png"))
-        self.shrink_drawing_tiles_button = Button(1500, 560, pyi.load("V2/graphics/buttons/shrink_button.png"))
-        self.export_tile_map_button = Button(1500, 660, pyi.load("V2/graphics/buttons/export_button.png"))
-        self.reset_tile_map_button = Button(1500, 760, pyi.load("V2/graphics/buttons/reset_button.png"))
-
-        # Add the buttons into the buttons group
-        self.buttons_group.add(self.extend_drawing_tiles_button)
-        self.buttons_group.add(self.shrink_drawing_tiles_button)
-        self.buttons_group.add(self.export_tile_map_button)
-        self.buttons_group.add(self.reset_tile_map_button)
-
-        self.button_clicked_time = pygame.time.get_ticks() # Used to record when a button has been clicked
+        # Record the last time a button was clicked
+        self.button_clicked_time = pygame.time.get_ticks()
 
     # ----------------------------------------------------------------------------------------
     # Initial set-up methods
@@ -157,9 +147,26 @@ class DrawingTiles():
             # Add the row of items list to the tile list
             self.tile_list.append(row_of_items_list)
 
+    def create_buttons(self):
+
+        # Create the buttons group
+        self.buttons_group = pygame.sprite.Group()
+
+        # Create a list of buttons with all the button images in the buttons directory
+        list_of_buttons = os.listdir("V2/graphics/buttons")
+
+        # For all the buttons in the list
+        for i in range(0, len(list_of_buttons)):
+
+            # Set/ create a new attribute e.g. self.export__tile_map_button, self.extend_drawing_tiles_button, etc.
+            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1500, 460 + (100 * i), pyi.load(f"V2/graphics/buttons/{list_of_buttons[i]}")) ) # [:-4] removes the ".png" from the attribute name
+            
+            # Add the new attribute that was just created to the buttons group
+            self.buttons_group.add(self.__getattribute__(list_of_buttons[i][:-4]))
+        
     # ----------------------------------------------------------------------------------------
     # Interaction methods
-    
+
     def extend_drawing_tiles(self):
 
         # For each row in the tile list
