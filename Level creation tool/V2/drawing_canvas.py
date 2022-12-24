@@ -85,8 +85,9 @@ class DrawingTiles():
     # Initial set-up methods
 
     def load_tile_images(self):
+
         # Find out the number of images in the following directory 
-        number_of_images = len(os.listdir("V2/graphics/palette_tiles")[:-1])  # [:-1] because one of the images are "empty.png"
+        number_of_images = len(os.listdir("V2/graphics/palette_tiles"))
 
         # Create a tuple with all of the images inside of the following directory
         images_tuple = tuple( pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{i}.png"), (32, 32)) for i in range(0, number_of_images) ) 
@@ -104,7 +105,7 @@ class DrawingTiles():
         palette_tile_count = 0 # Keeps track of the current item in the directory
 
         # While we haven't made all of the palette tiles in the directory
-        while palette_tile_count != len(os.listdir("V2/graphics/palette_tiles")[:-1]): # Number of tiles excluding the "empty" palette tile
+        while palette_tile_count != len(os.listdir("V2/graphics/palette_tiles")): 
 
             # If we have reached the maximum amount of palette tiles in each row
             if palette_tile_count % 14 == 0 and palette_tile_count != 0:
@@ -369,6 +370,11 @@ class DrawingTiles():
         j = 0 # Keeps track of the current row
         i = 0 # Keeps track of the current item in the row
 
+        # Define the width/height/line thickness for the border of each palette tile
+        border_width = 80
+        border_height = 80
+        border_line_thickness = 3
+
         # For every palette tile in the palette tiles group
         for palette_tile in self.palette_tiles_group:
 
@@ -379,6 +385,10 @@ class DrawingTiles():
                 j += 1
                 # Reset i, so that the tile is displayed at the start of the row
                 i = 0
+
+            # Draw an outline and "background" for each palette tile
+            pygame.draw.rect(self.screen, "gray33", (50 + (100 * i) - ((border_width - (self.tile_size * 2)) / 2) , 500 + (j * 100) - ((border_height - (self.tile_size * 2)) / 2), border_width, border_height) , 0)
+            pygame.draw.rect(self.screen, "black", (50 + (100 * i) - ((border_width - (self.tile_size * 2)) / 2) , 500 + (j * 100) - ((border_height - (self.tile_size * 2)) / 2), border_width, border_height) , border_line_thickness)
 
             # Draw the palette tile onto the screen
             palette_tile.draw(50 + (100 * i), 500 + (j * 100))
@@ -394,14 +404,14 @@ class DrawingTiles():
 
     def run(self):
 
-        # Draw the grid
-        self.draw_grid() 
-
         # Draw the tiles menu
         self.draw_tiles_menu()
 
         # Draw the tiles
         self.draw_tiles()   
+
+        # Draw the grid
+        self.draw_grid()
 
         # Draw palette tiles
         self.draw_palette_tiles()
