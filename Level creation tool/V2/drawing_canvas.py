@@ -1,5 +1,6 @@
-import pygame, os
+import pygame, os, string, sys
 from settings import *
+from extra_functions import * 
 from pygame import transform as pyt
 from pygame import image as pyi
 
@@ -58,7 +59,7 @@ class DrawingTiles():
 
         # Create palette tiles
         self.create_palette_tiles()
-        
+
         # ----------------------------------------------------------------------------------------
         # Drawing tiles
         self.tile_list = []
@@ -72,11 +73,16 @@ class DrawingTiles():
         # If the text file that stores all of the existing tile maps created is greater than 0 (It means there is at least one tile map inside)
         if os.path.getsize("V2/existing_tile_maps.txt") > 0:
             
-            # Open the existing tile maps file 
-            with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+            # Call the loading_tile_map_input method
+            self.loading_tile_map_input()
 
-                # Load an existing tile map
-                self.load_existing_tile_map(existing_tile_maps_file)
+            print()
+
+            # # Open the existing tile maps file 
+            # with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+                
+            #     # Load an existing tile map
+            #     self.load_existing_tile_map(existing_tile_maps_file)
         
         # If there are no existing tile maps, create a new default tile map
         else:
@@ -94,7 +100,91 @@ class DrawingTiles():
 
     # ----------------------------------------------------------------------------------------
     # Initial set-up methods
+    def loading_tile_map_input(self):
+        
+        existing_tile_maps_dict =  {} # Holds all of the existing tile maps
+        tile_map_count = 0 # Holds the number of tile maps saved in the file
 
+        # ------------------------------------------------
+        # Find out the number of tile maps and save it to the dictionary
+
+        # Open the existing tile maps file 
+        with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+
+            # For each line in the tile maps file
+            for line in existing_tile_maps_file.readlines():
+
+                # If the line starts with "[[", it means this line contains the tile map
+                if line.startswith("[["):
+
+                    # Increment the tile map count
+                    tile_map_count += 1
+                    
+                    # Create a new key:value pair in the existing tile maps dictionary, remove the \n at the end of each line
+                    existing_tile_maps_dict[tile_map_count] = line.strip("\n")
+
+        # For each tile map in the dictionary
+        for tile_map_number, tile_map in existing_tile_maps_dict.items():
+            # Print the tile map in the terminal
+            print(f"Tile map {tile_map_number}: \n{tile_map}\n")
+
+        # ------------------------------------------------
+        # Handling user input for choosing tile map
+
+
+        # Define an empty user input string, font used and the user input box
+        user_input_string = ""
+        user_input_font = pygame.font.SysFont("Bahnschrift", 40)
+        user_input_rectangle = pygame.Rect((screen_width / 2) - 110, 100, 200, 60)
+
+        # Continuously ask for user input 
+        while True: 
+            
+            # Fill the screen with grey
+            self.screen.fill("gray17") 
+
+            # Display the instructions onto the screen
+            draw_text("Please enter a tile map", user_input_font, "white", (screen_width / 2) - 210, 50, self.screen)
+
+            # Display the user input string onto the screen
+            draw_text(user_input_string, user_input_font, "white", user_input_rectangle.x + 10, user_input_rectangle.y + 10, self.screen)
+
+            # Draw a rectangle for the user input 
+            pygame.draw.rect(self.screen, "black", user_input_rectangle, 5)
+
+            # Event handler
+            for event in pygame.event.get():
+                
+                # If the user pressed a key
+                if event.type == pygame.KEYDOWN:
+
+                    # If the key that was pressed is a number and the tile map number selected is a single digit number
+                    if event.unicode in string.digits and len(user_input_string) < 1:
+                        # Concatenate the digit onto user_input_string
+                        user_input_string += event.unicode
+
+
+                    # If the user pressed the backspace key
+                    if event.key == pygame.K_BACKSPACE:
+                        # Remove the last item of the text
+                        user_input_string = user_input_string[:-1]
+
+                    # If the user pressed the return / enter key
+                    if event.key == pygame.K_RETURN:
+                        # if len(user_input_string) == 0 and int(user_input_string) not in existing_tile_maps_dict.keys() and int(user_input_string) > 0:
+                        # break
+                        print("yes")
+
+                # If the exit button was pressed
+                if event.type == pygame.QUIT:
+                    # Close the program
+                    pygame.quit()
+                    sys.exit()
+
+            # Update display
+            pygame.display.update()
+
+                    
     def load_existing_tile_map(self, existing_tile_maps_file):
 
         # Save the contents of the existing_tile_maps file to this variable
@@ -282,7 +372,9 @@ class DrawingTiles():
         
         # Open the existing tile maps and append the current list of tiles (only palette numbers)
         with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
-            existing_tile_maps_file.write(str(export_list))
+
+            # Add a line break at the end of each tile map save
+            existing_tile_maps_file.write(str(export_list) + "\n")
 
     def reset_tile_map(self):
         # For each row in the tile list
