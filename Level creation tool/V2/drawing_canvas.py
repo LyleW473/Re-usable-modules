@@ -230,7 +230,7 @@ class DrawingTiles():
         for i in range(0, len(list_of_buttons)):
 
             # Set/ create a new attribute e.g. self.export__tile_map_button, self.extend_drawing_tiles_button, etc.
-            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1500, 460 + (100 * i), pyi.load(f"V2/graphics/buttons/{list_of_buttons[i]}")) ) # [:-4] removes the ".png" from the attribute name
+            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1500, 475 + (i * 80), pyi.load(f"V2/graphics/buttons/{list_of_buttons[i]}")) ) # [:-4] removes the ".png" from the attribute name
 
             # Add the new attribute that was just created to the buttons group
             self.buttons_group.add(self.__getattribute__(list_of_buttons[i][:-4]))
@@ -258,7 +258,7 @@ class DrawingTiles():
                     # Remove the last item of the row
                     row.pop()
 
-    def export_and_save_tile_map(self):
+    def save_tile_map(self):
         # List which will hold all the rows of items inside the tile map
         export_list = []
 
@@ -358,19 +358,19 @@ class DrawingTiles():
             if pygame.time.get_ticks() - self.button_clicked_time > 500:
 
                 # If the mouse rect collides with the rect of the extend drawing tiles button
-                if self.mouse_rect.colliderect(self.extend_drawing_tiles_button.rect):
+                if self.mouse_rect.colliderect(self.drawing_tiles_extend_button.rect):
                     # Extend the drawing tiles by one column
                     self.extend_drawing_tiles()
                 
                 # If the mouse rect collides with the rect of the shrink drawing tiles button
-                if self.mouse_rect.colliderect(self.shrink_drawing_tiles_button.rect):
+                if self.mouse_rect.colliderect(self.drawing_tiles_shrink_button.rect):
                     # Shrink the drawing tiles by one column
                     self.shrink_drawing_tiles()
 
-                # If the mouse rect collides with the rect of the export tile map button
-                if self.mouse_rect.colliderect(self.export_tile_map_button.rect):
-                    # Export the tile map
-                    self.export_and_save_tile_map()    
+                # If the mouse rect collides with the rect of the save tile map button
+                if self.mouse_rect.colliderect(self.save_tile_map_button.rect):
+                    # Save the tile map
+                    self.save_tile_map()    
 
                 # If the mouse rect collides with the rect of the reset tile map button
                 if self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
@@ -426,7 +426,7 @@ class DrawingTiles():
         # For every button in the buttons group
         for i, button in enumerate(self.buttons_group):
             # Draw the button onto the screen
-            button.draw(1500, 460 + (i * 100))
+            button.draw(1500, 475 + (i * 80))
 
     def draw_tiles(self):
 
