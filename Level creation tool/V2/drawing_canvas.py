@@ -42,9 +42,6 @@ class DrawingTiles():
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         self.origin_point = pygame.math.Vector2(0, 0) # The point where the drawing grid and tiles are drawn from
         
-        # Set mouse as not visible
-        pygame.mouse.set_visible(False)
-
         # Create a transparency surface for the grid to be drawn onto
         self.transparency_surface = pygame.Surface((screen_width, screen_height))
 
@@ -79,6 +76,11 @@ class DrawingTiles():
         else:
             # Create the initial drawing tiles
             self.create_drawing_tiles()
+
+        # ----------------------------------------------------------------------------------------
+        # Note: This was moved here so that during the load tile map input phase, the cursor is still visible
+        # Set the mouse as not visible
+        pygame.mouse.set_visible(False)
 
         # ----------------------------------------------------------------------------------------
         # Buttons
@@ -122,10 +124,11 @@ class DrawingTiles():
         # ------------------------------------------------
         # Handling user input for choosing tile map
 
-        # Define an empty user input string, font used and the user input box
+        # Define an empty user input string, font used, the user input box and a variable which tracks whether the user entered an invalid tile map
         user_input_string = ""
         user_input_font = pygame.font.SysFont("Bahnschrift", 40)
-        user_input_rectangle = pygame.Rect((screen_width / 2) - 110, 100, 200, 60)
+        user_input_rectangle = pygame.Rect((screen_width / 2) - 110, (screen_height / 2) - 30, 200, 60)
+        invalid_input = False
 
         # Continuously ask for user input 
         while True: 
@@ -134,13 +137,31 @@ class DrawingTiles():
             self.screen.fill("gray17") 
 
             # Display the instructions onto the screen
-            draw_text("Please enter a tile map", user_input_font, "white", (screen_width / 2) - 210, 50, self.screen)
+            draw_text("Please enter a tile map", user_input_font, "white", user_input_rectangle.x - 100, user_input_rectangle.y - 60, self.screen)
 
             # Display the user input string onto the screen
             draw_text(user_input_string, user_input_font, "white", user_input_rectangle.x + 10, user_input_rectangle.y + 10, self.screen)
 
+            # Display the number of tile maps text onto the screen
+            draw_text(f"There are {len(existing_tile_maps_dict)} tile maps.", user_input_font, "dodgerblue4", user_input_rectangle.x - 90, user_input_rectangle.y - 160, self.screen)
+
             # Draw a rectangle for the user input 
             pygame.draw.rect(self.screen, "black", user_input_rectangle, 5)
+            
+            # If the user entered an invalid tile map
+            if invalid_input == True:
+
+                # Display the invalid text onto the screen for 1 second
+                if pygame.time.get_ticks() - invalid_input_time < 1000:
+                    draw_text(f"Tilemap {int(user_input_string)} does not exist.", user_input_font, "red", user_input_rectangle.x - 110, user_input_rectangle.y + 90, self.screen)
+                
+                # Once the second has passed
+                else:
+                    # Reset the user input string
+                    user_input_string = ""
+
+                    # Reset the invalid_input variable
+                    invalid_input = False
 
             # ------------------------------------------------
             # Event handler
@@ -156,12 +177,12 @@ class DrawingTiles():
 
 
                     # If the user pressed the backspace key
-                    if event.key == pygame.K_BACKSPACE:
-                        # Remove the last item of the text
+                    if event.key == pygame.K_BACKSPACE and invalid_input == False:
+                        # Remove the last item of the text and the user hasn't recently entered an invalid tile map
                         user_input_string = user_input_string[:-1]
 
-                    # If the user pressed the return / enter key and the user input string is not empty
-                    if event.key == pygame.K_RETURN and len(user_input_string) > 0:
+                    # If the user pressed the return / enter key and the user input string is not empty and the user hasn't recently entered an invalid tile map
+                    if event.key == pygame.K_RETURN and len(user_input_string) > 0 and invalid_input == False:
 
                         # If the tile map selected is a key in the existing tile maps dictionary
                         if int(user_input_string) in existing_tile_maps_dict.keys():
@@ -172,11 +193,11 @@ class DrawingTiles():
 
                         # If the tile map selected isn't a key in the existing tile maps dictionary
                         else:
-                            # --------------------------------------
-                            # ADD INVALID DRAW TEXT HERE FOR 3 SECONDS 
+                            # Set the invalid input variable to True
+                            invalid_input = True
 
-                            # Reset the user input string
-                            user_input_string = ""
+                            # Record the time that the user got the 
+                            invalid_input_time = pygame.time.get_ticks()
 
                 # If the exit button was pressed
                 if event.type == pygame.QUIT:
