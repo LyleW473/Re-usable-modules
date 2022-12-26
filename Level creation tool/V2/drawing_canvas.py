@@ -119,9 +119,14 @@ class DrawingTiles():
         user_input_rectangle = pygame.Rect((screen_width / 2) - 110, (screen_height / 2) - 30, 200, 60)
         invalid_input = False
 
+        # Create a button to go back to the editor
+        return_to_editor_button = Button((screen_width / 2) - 250 + abs(self.origin_point.x), user_input_rectangle.y + 250, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
+
         # Continuously ask for user input 
         while True: 
-            
+            # ------------------------------------------------
+            # Menu display
+
             # Fill the screen with grey
             self.screen.fill("gray17") 
 
@@ -136,7 +141,10 @@ class DrawingTiles():
 
             # Draw a rectangle for the user input 
             pygame.draw.rect(self.screen, "black", user_input_rectangle, 5)
-            
+
+            # Draw the return to editor button
+            return_to_editor_button.draw((screen_width / 2) - 250, user_input_rectangle.y + 250)
+
             # If the user entered an invalid tile map
             if invalid_input == True:
 
@@ -152,6 +160,28 @@ class DrawingTiles():
                     # Reset the invalid_input variable
                     invalid_input = False
 
+            # ------------------------------------------------
+            # Handle mouse input
+
+            # Retrieve the mouse position
+            self.mouse_position = pygame.mouse.get_pos()
+
+            # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
+            self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
+
+            # If the user has pressed the left click
+            if pygame.mouse.get_pressed()[0]:
+
+                # If the mouse rect collides with the rect of the save as new tile map button
+                if self.mouse_rect.colliderect(return_to_editor_button.rect):
+                    print("yes")
+
+                    # Set the mouse cursor invisible again
+                    pygame.mouse.set_visible(False)
+
+                    # Return None (this will mean that nothing happens inside the save_tile_map method)
+                    return None
+            
             # ------------------------------------------------
             # Event handler
             for event in pygame.event.get():
@@ -204,11 +234,16 @@ class DrawingTiles():
 
     def load_existing_tile_map(self, tile_map):
 
-        # Reset self.tile_list so that if the user tried loading multiple tilemaps, only one tile map is displayed at a time
-        self.tile_list = []
+        # If tile map is None, it means the user pressed the "Return to editor button"
+        if tile_map == None:
+            # Exit the method
+            return None
 
         # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method
         string_tile_list = tile_map[0]
+
+        # Reset self.tile_list so that if the user tried loading multiple tilemaps, only one tile map is displayed at a time
+        self.tile_list = []
 
         # Save the tile map selected and the number the tile map is as an attribute
         # Note: This is so that when the user is given the choice to save this as a new tile map or to overwrite the existing tile map, we know which tile map to replace in the text file if they choose to overwrite the existing tile map
@@ -382,6 +417,17 @@ class DrawingTiles():
 
     def save_tile_map(self):
 
+        # Variable that stores the user's choice of whether to overwrite the existing tile map selected or create a new tile map
+        save_as_new_tile_map = self.save_tile_map_input()
+        
+        # Check if the player pressed clicked the return button, if it did then don't execute the following code
+        if save_as_new_tile_map == None:
+            # Exit the method
+            return 
+
+        # ----------------------------------------------------------------------------------------
+        # Convert the current tile map into a tile map of its palette numbers
+
         # List which will hold all the rows of items inside the tile map
         tile_map_to_be_saved = []
 
@@ -400,8 +446,8 @@ class DrawingTiles():
             # Add the row of items list to the the tile map to be saved
             tile_map_to_be_saved.append(row_of_items_list)
 
-        # Variable that stores the user's choice of whether to overwrite the existing tile map selected or create a new tile map
-        save_as_new_tile_map = self.save_tile_map_input()
+        # ----------------------------------------------------------------------------------------
+        # Save the tile map according to the user's choice
 
         # If the user has chosen to overwrite the existing tile map selected
         if save_as_new_tile_map == False:
@@ -426,7 +472,7 @@ class DrawingTiles():
                 print("Saved onto existing tile map")
 
         # If the user has chosen to save the current tile map as a new tile map
-        else:
+        elif save_as_new_tile_map == True:
             # Open the existing tile maps and append the current list of tiles (only palette numbers)
             with open("V2/existing_tile_maps.txt", "a") as existing_tile_maps_file:
 
@@ -442,10 +488,17 @@ class DrawingTiles():
         pygame.mouse.set_visible(True)
 
         # Create the buttons for this menu
-        # Note: The buttosn are (500 x 125) pixels
-        save_as_new_tile_map_button = Button((screen_width / 2) - 250 , 250, pyi.load("V2/graphics/buttons/user_input/save_as_new_tile_map_button.png"))
-        overwrite_selected_tile_map_button = Button(save_as_new_tile_map_button.rect.x, save_as_new_tile_map_button.rect.y + 150, pyi.load("V2/graphics/buttons/user_input/overwrite_selected_tile_map_button.png"))
-        instructions_font = pygame.font.SysFont("Bahnschrift", 40)
+        # Note: The buttons are (500 x 125) pixels
+        # Define positioning (Easy to modify)
+        button_x_position = (screen_width / 2) - 250
+        button_y_position = 250
+
+        save_as_new_tile_map_button = Button(button_x_position + abs(self.origin_point.x), button_y_position, pyi.load("V2/graphics/buttons/user_input/save_as_new_tile_map_button.png"))
+        overwrite_selected_tile_map_button = Button(button_x_position + abs(self.origin_point.x), button_y_position + 150, pyi.load("V2/graphics/buttons/user_input/overwrite_selected_tile_map_button.png"))
+        return_to_editor_button = Button(button_x_position + abs(self.origin_point.x), button_y_position + 300, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
+        
+        # Define a font 
+        existing_tile_map_selected_font = pygame.font.SysFont("Bahnschrift", 40)
 
         # Continuously ask for user input 
         while True:         
@@ -457,17 +510,18 @@ class DrawingTiles():
             self.screen.fill("gray17") 
 
             # Draw the buttons on screen
-            save_as_new_tile_map_button.draw(save_as_new_tile_map_button.rect.x, save_as_new_tile_map_button.rect.y)
-            overwrite_selected_tile_map_button.draw(overwrite_selected_tile_map_button.rect.x, overwrite_selected_tile_map_button.rect.y)
+            save_as_new_tile_map_button.draw(button_x_position, button_y_position)
+            overwrite_selected_tile_map_button.draw(button_x_position, button_y_position + 150)
+            return_to_editor_button.draw(button_x_position, button_y_position + 300)
 
             # If a tile map has been selected
             if hasattr(self, "existing_tile_map_selected"):
                 # Draw a text indicating the number of the tile map selected
-                draw_text(f"Selected tile map: {self.existing_tile_map_selected[1]}", instructions_font, "white", save_as_new_tile_map_button.rect.x + 40, save_as_new_tile_map_button.rect.y - 50, self.screen)
+                draw_text(f"Selected tile map: {self.existing_tile_map_selected[1]}", existing_tile_map_selected_font, "white", button_x_position + 40 , button_y_position - 80, self.screen)
             # Otherwise
             else:
                 # Draw a text indicating that there is no tile map selected
-                draw_text("Selected tile map: None", instructions_font, "white", save_as_new_tile_map_button.rect.x + 40, save_as_new_tile_map_button.rect.y - 50, self.screen)
+                draw_text("Selected tile map: None", existing_tile_map_selected_font, "white", button_x_position + 40 , button_y_position - 80, self.screen)
 
             # ----------------------------------------------------------------------------------------
             # Handle mouse input
@@ -481,7 +535,7 @@ class DrawingTiles():
             # If the user has pressed the left click
             if pygame.mouse.get_pressed()[0]:
 
-                # If the mouse rect collides with the rect of the yes button
+                # If the mouse rect collides with the rect of the save as new tile map button
                 if self.mouse_rect.colliderect(save_as_new_tile_map_button.rect):
 
                     # Set the mouse cursor invisible again
@@ -490,7 +544,7 @@ class DrawingTiles():
                     # Return True, meaning that the user wants to save the current tile map as a new tile map
                     return True
 
-                # If the mouse rect collides with the rect of the no button
+                # If the mouse rect collides with the rect of the overwrite selected tile map button
                 elif self.mouse_rect.colliderect(overwrite_selected_tile_map_button.rect):
                     
                     # If there is an attribute called self.existing_tile_map_selected, it means the user has chosen a tile map to overwrite
@@ -505,6 +559,16 @@ class DrawingTiles():
                     # Otherwise:
                     else:
                         print("You have not selected a tile map to overwrite")
+                
+                # If the mouse rect collides with the rect of the return to editor button
+                elif self.mouse_rect.colliderect(return_to_editor_button.rect):
+
+                    # Set the mouse cursor invisible again
+                    pygame.mouse.set_visible(False)
+
+                    # Return None (this will mean that nothing happens inside the save_tile_map method)
+                    return None
+
 
             # Event handler
             for event in pygame.event.get():
