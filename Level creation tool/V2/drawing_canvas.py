@@ -181,8 +181,8 @@ class DrawingTiles():
                             # Output a message in the terminal to indicate that the tile map selected is being loaded
                             print(f"Loading tilemap {int(user_input_string)}...")
 
-                            # Return the tile map (this is fed into the load_existing_tile_map method)
-                            return existing_tile_maps_dict[int(user_input_string)]
+                            # Return a list containing: the tile map (this is fed into the load_existing_tile_map method) and which tile map number it is
+                            return [ existing_tile_maps_dict[int(user_input_string)], int(user_input_string) ]
 
 
                         # If the tile map selected isn't a key in the existing tile maps dictionary
@@ -208,9 +208,9 @@ class DrawingTiles():
         self.tile_list = []
 
         # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method
-        string_tile_list = tile_map
+        string_tile_list = tile_map[0]
 
-        # Save the tile map selected as an attribute 
+        # Save the tile map selected and the number the tile map is as an attribute
         # Note: This is so that when the user is given the choice to save this as a new tile map or to overwrite the existing tile map, we know which tile map to replace in the text file if they choose to overwrite the existing tile map
         self.existing_tile_map_selected = tile_map
 
@@ -412,10 +412,10 @@ class DrawingTiles():
                     existing_tile_maps_file_content = existing_tile_maps_file.read()
 
                     # Replace the old tile map stored in the text with the tile map to be saved
-                    existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.existing_tile_map_selected, str(tile_map_to_be_saved))
+                    existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.existing_tile_map_selected[0], str(tile_map_to_be_saved))
 
                     # Set the existing tile map selected as the saved tile map
-                    self.existing_tile_map_selected = str(tile_map_to_be_saved)
+                    self.existing_tile_map_selected[0] = str(tile_map_to_be_saved)
 
                 # Open the file to write the contents
                 with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
@@ -445,6 +445,7 @@ class DrawingTiles():
         # Note: The buttosn are (500 x 125) pixels
         save_as_new_tile_map_button = Button((screen_width / 2) - 250 , 250, pyi.load("V2/graphics/buttons/user_input/save_as_new_tile_map_button.png"))
         overwrite_selected_tile_map_button = Button(save_as_new_tile_map_button.rect.x, save_as_new_tile_map_button.rect.y + 150, pyi.load("V2/graphics/buttons/user_input/overwrite_selected_tile_map_button.png"))
+        instructions_font = pygame.font.SysFont("Bahnschrift", 40)
 
         # Continuously ask for user input 
         while True:         
@@ -458,6 +459,15 @@ class DrawingTiles():
             # Draw the buttons on screen
             save_as_new_tile_map_button.draw(save_as_new_tile_map_button.rect.x, save_as_new_tile_map_button.rect.y)
             overwrite_selected_tile_map_button.draw(overwrite_selected_tile_map_button.rect.x, overwrite_selected_tile_map_button.rect.y)
+
+            # If a tile map has been selected
+            if hasattr(self, "existing_tile_map_selected"):
+                # Draw a text indicating the number of the tile map selected
+                draw_text(f"Selected tile map: {self.existing_tile_map_selected[1]}", instructions_font, "white", save_as_new_tile_map_button.rect.x + 40, save_as_new_tile_map_button.rect.y - 50, self.screen)
+            # Otherwise
+            else:
+                # Draw a text indicating that there is no tile map selected
+                draw_text("Selected tile map: None", instructions_font, "white", save_as_new_tile_map_button.rect.x + 40, save_as_new_tile_map_button.rect.y - 50, self.screen)
 
             # ----------------------------------------------------------------------------------------
             # Handle mouse input
@@ -702,10 +712,27 @@ class DrawingTiles():
             i += 1
 
     def draw_tiles_menu(self):
+
+        # Define the menu x and y co-ordinates (Easier to modify positioning of the menu)
+        tiles_menu_x = 25
+        tiles_menu_y = 475
+
         # Body
-        pygame.draw.rect(self.screen, "gray20", (25, 475, 1425, 400))
+        pygame.draw.rect(self.screen, "gray20", (tiles_menu_x, tiles_menu_y, 1425, 400))
         # Outline
-        pygame.draw.rect(self.screen, "white", (25, 475, 1425, 400), 5)
+        pygame.draw.rect(self.screen, "white", (tiles_menu_x, tiles_menu_y, 1425, 400), 5)
+
+        # ----------------------------------------------------------------------------------------
+        # Text displaying the current tile map selected
+        existing_tile_map_selected_text_font = pygame.font.SysFont("Bahnschrift", 15)
+        
+        # If a tile map has been selected
+        if hasattr(self, "existing_tile_map_selected"):
+            # Draw a text indicating the number of the tile map selected
+            draw_alpha_text(f"Selected tile map:  {self.existing_tile_map_selected[1]}", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 20, self.screen, 110)
+        else:
+            # Draw a text indicating the number of the tile map selected
+            draw_alpha_text(f"Selected tile map:  None", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 20, self.screen, 110)
 
     def run(self):
 
