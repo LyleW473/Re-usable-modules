@@ -210,6 +210,10 @@ class DrawingTiles():
         # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method
         string_tile_list = tile_map
 
+        # Save the tile map selected as an attribute 
+        # Note: This is so that when the user is given the choice to save this as a new tile map or to overwrite the existing tile map, we know which tile map to replace in the text file if they choose to overwrite the existing tile map
+        self.existing_tile_map_selected = tile_map
+
         # ----------------------------------------------------------------------------------------
         # Cleaning the string
 
@@ -376,8 +380,9 @@ class DrawingTiles():
                     row.pop()
 
     def save_tile_map(self):
+
         # List which will hold all the rows of items inside the tile map
-        export_list = []
+        tile_map_to_be_saved = []
 
         # For each row in the tile list
         for row_count, row in enumerate(self.tile_list):
@@ -391,17 +396,38 @@ class DrawingTiles():
                 # Add the palette number of the tile to the row of items list
                 row_of_items_list.append(self.tile_list[row_count][i][1])
 
-            # Add the row of items list to the export list
-            export_list.append(row_of_items_list)
+            # Add the row of items list to the the tile map to be saved
+            tile_map_to_be_saved.append(row_of_items_list)
 
-        # Print the tile map in the terminal (for copy-paste methods)
-        print(export_list)
-        
-        # Open the existing tile maps and append the current list of tiles (only palette numbers)
-        with open("V2/existing_tile_maps.txt", "a") as existing_tile_maps_file:
+        # Variable that stores the user's choice of whether to overwrite the existing tile map selected ro 
+        save_as_new_tile_map = False
 
-            # Add a line break at the end of each tile map save
-            existing_tile_maps_file.write(str(export_list) + "\n")
+        # If the user has chosen to overwrite the existing tile map selected
+        if save_as_new_tile_map == False:
+
+                # Open the file to read the contents
+                with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+                    # Read the contents of the file and save it to a variable
+                    existing_tile_maps_file_content = existing_tile_maps_file.read()
+
+                    # Replace the old tile map stored in the text with the tile map to be saved
+                    existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.existing_tile_map_selected, str(tile_map_to_be_saved))
+
+                    # Set the existing tile map selected as the saved tile map
+                    self.existing_tile_map_selected = str(tile_map_to_be_saved)
+
+                # Open the file to write the contents
+                with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
+                    # Write the changes made to the existing tile maps file
+                    existing_tile_maps_file.write(existing_tile_maps_file_content)
+
+        # If the user has chosen to save the current tile map as a new tile map
+        else:
+            # Open the existing tile maps and append the current list of tiles (only palette numbers)
+            with open("V2/existing_tile_maps.txt", "a") as existing_tile_maps_file:
+
+                # Add a line break at the end of each tile map save
+                existing_tile_maps_file.write(str(tile_map_to_be_saved) + "\n")
 
     def reset_tile_map(self):
         # For each row in the tile list
