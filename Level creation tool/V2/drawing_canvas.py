@@ -39,6 +39,7 @@ class Button(pygame.sprite.Sprite):
     
 class DrawingTiles():
     def __init__(self):
+
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         self.origin_point = pygame.math.Vector2(0, 0) # The point where the drawing grid and tiles are drawn from
         
@@ -47,6 +48,9 @@ class DrawingTiles():
 
         # Set the alpha level
         self.transparency_surface.set_alpha(75)
+
+        # Set the mouse as not visible initially (This will be changed when the user tries to load an existing tile map)
+        pygame.mouse.set_visible(False)
 
         # ----------------------------------------------------------------------------------------
         # Palette tiles
@@ -59,7 +63,6 @@ class DrawingTiles():
 
         # ----------------------------------------------------------------------------------------
         # Drawing tiles
-        self.tile_list = []
 
         # Set the size of the tiles
         self.tile_size = 32 
@@ -67,20 +70,8 @@ class DrawingTiles():
         # Create a tuple with all the images needed for the tiles
         self.image = self.load_tile_images()
 
-        # If the text file that stores all of the existing tile maps created is greater than 0 (It means there is at least one tile map inside)
-        if os.path.getsize("V2/existing_tile_maps.txt") > 0:
-            # Call the loading_existing tile map method with the parameter set as the tile map from the input stage 
-            self.load_existing_tile_map(tile_map = self.loading_tile_map_input())
-        
-        # If there are no existing tile maps, create a new default tile map
-        else:
-            # Create the initial drawing tiles
-            self.create_drawing_tiles()
-
-        # ----------------------------------------------------------------------------------------
-        # Note: This was moved here so that during the load tile map input phase, the cursor is still visible
-        # Set the mouse as not visible
-        pygame.mouse.set_visible(False)
+        # Create a new tile map (A new tile map is created by default upon loading the program)
+        self.create_new_tile_map()
 
         # ----------------------------------------------------------------------------------------
         # Buttons
@@ -95,6 +86,9 @@ class DrawingTiles():
     # Initial set-up methods
     def loading_tile_map_input(self):
         
+        # Set the mouse cursor as visible when asking for user input when loading a tile map
+        pygame.mouse.set_visible(True)
+    
         existing_tile_maps_dict =  {} # Holds all of the existing tile maps
         tile_map_count = 0 # Holds the number of tile maps saved in the file
 
@@ -115,11 +109,6 @@ class DrawingTiles():
                     
                     # Create a new key:value pair in the existing tile maps dictionary, remove the \n at the end of each line
                     existing_tile_maps_dict[tile_map_count] = line.strip("\n")
-
-        # For each tile map in the dictionary
-        for tile_map_number, tile_map in existing_tile_maps_dict.items():
-            # Print the tile map in the terminal
-            print(f"Tile map {tile_map_number}: \n{tile_map}\n")
 
         # ------------------------------------------------
         # Handling user input for choosing tile map
@@ -175,7 +164,6 @@ class DrawingTiles():
                         # Concatenate the digit onto user_input_string
                         user_input_string += event.unicode
 
-
                     # If the user pressed the backspace key
                     if event.key == pygame.K_BACKSPACE and invalid_input == False:
                         # Remove the last item of the text and the user hasn't recently entered an invalid tile map
@@ -186,7 +174,13 @@ class DrawingTiles():
 
                         # If the tile map selected is a key in the existing tile maps dictionary
                         if int(user_input_string) in existing_tile_maps_dict.keys():
-                            
+
+                            # Set the mouse cursor invisible again
+                            pygame.mouse.set_visible(False)
+
+                            # Output a message in the terminal to indicate that the tile map selected is being loaded
+                            print(f"Loading tilemap {int(user_input_string)}...")
+
                             # Return the tile map (this is fed into the load_existing_tile_map method)
                             return existing_tile_maps_dict[int(user_input_string)]
 
@@ -209,6 +203,9 @@ class DrawingTiles():
             pygame.display.update()
 
     def load_existing_tile_map(self, tile_map):
+
+        # Reset self.tile_list so that if the user tried loading multiple tilemaps, only one tile map is displayed at a time
+        self.tile_list = []
 
         # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method
         string_tile_list = tile_map
@@ -266,6 +263,9 @@ class DrawingTiles():
 
             # Add the row of items list to the tile list
             self.tile_list.append(row_of_items_list)
+        
+        # Output a message in the terminal to indicate that the tile map selected has finished loading
+        print("Loading complete.")
             
     def load_tile_images(self):
 
@@ -307,7 +307,11 @@ class DrawingTiles():
             i += 1
             palette_tile_count += 1
 
-    def create_drawing_tiles(self):
+    def create_new_tile_map(self):
+
+        # Reset self.tile_list so that if the user tried loading multiple tilemaps, only one tile map is displayed at a time
+        self.tile_list = []
+
         # Calculate the number of lines for x and y
         number_of_lines_x = (screen_width / 2) / 32
         number_of_lines_y = (screen_height / 2) / 32
@@ -481,6 +485,13 @@ class DrawingTiles():
                 if self.mouse_rect.colliderect(self.drawing_tiles_shrink_button.rect):
                     # Shrink the drawing tiles by one column
                     self.shrink_drawing_tiles()
+
+                # If the mouse rect collides with the rect of the load tile map button
+                if self.mouse_rect.colliderect(self.load_tile_map_button.rect):
+                    # If the text file that stores all of the existing tile maps created is greater than 0 (It means there is at least one tile map inside)
+                    if os.path.getsize("V2/existing_tile_maps.txt") > 0:
+                        # Call the loading_existing tile map method with the parameter set as the tile map from the input stage 
+                        self.load_existing_tile_map(tile_map = self.loading_tile_map_input())
 
                 # If the mouse rect collides with the rect of the save tile map button
                 if self.mouse_rect.colliderect(self.save_tile_map_button.rect):
