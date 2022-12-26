@@ -72,17 +72,8 @@ class DrawingTiles():
 
         # If the text file that stores all of the existing tile maps created is greater than 0 (It means there is at least one tile map inside)
         if os.path.getsize("V2/existing_tile_maps.txt") > 0:
-            
-            # Call the loading_tile_map_input method
-            self.loading_tile_map_input()
-
-            print()
-
-            # # Open the existing tile maps file 
-            # with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
-                
-            #     # Load an existing tile map
-            #     self.load_existing_tile_map(existing_tile_maps_file)
+            # Call the loading_existing tile map method with the parameter set as the tile map from the input stage 
+            self.load_existing_tile_map(tile_map = self.loading_tile_map_input())
         
         # If there are no existing tile maps, create a new default tile map
         else:
@@ -131,7 +122,6 @@ class DrawingTiles():
         # ------------------------------------------------
         # Handling user input for choosing tile map
 
-
         # Define an empty user input string, font used and the user input box
         user_input_string = ""
         user_input_font = pygame.font.SysFont("Bahnschrift", 40)
@@ -152,6 +142,7 @@ class DrawingTiles():
             # Draw a rectangle for the user input 
             pygame.draw.rect(self.screen, "black", user_input_rectangle, 5)
 
+            # ------------------------------------------------
             # Event handler
             for event in pygame.event.get():
                 
@@ -169,11 +160,23 @@ class DrawingTiles():
                         # Remove the last item of the text
                         user_input_string = user_input_string[:-1]
 
-                    # If the user pressed the return / enter key
-                    if event.key == pygame.K_RETURN:
-                        # if len(user_input_string) == 0 and int(user_input_string) not in existing_tile_maps_dict.keys() and int(user_input_string) > 0:
-                        # break
-                        print("yes")
+                    # If the user pressed the return / enter key and the user input string is not empty
+                    if event.key == pygame.K_RETURN and len(user_input_string) > 0:
+
+                        # If the tile map selected is a key in the existing tile maps dictionary
+                        if int(user_input_string) in existing_tile_maps_dict.keys():
+                            
+                            # Return the tile map (this is fed into the load_existing_tile_map method)
+                            return existing_tile_maps_dict[int(user_input_string)]
+
+
+                        # If the tile map selected isn't a key in the existing tile maps dictionary
+                        else:
+                            # --------------------------------------
+                            # ADD INVALID DRAW TEXT HERE FOR 3 SECONDS 
+
+                            # Reset the user input string
+                            user_input_string = ""
 
                 # If the exit button was pressed
                 if event.type == pygame.QUIT:
@@ -184,11 +187,10 @@ class DrawingTiles():
             # Update display
             pygame.display.update()
 
-                    
-    def load_existing_tile_map(self, existing_tile_maps_file):
+    def load_existing_tile_map(self, tile_map):
 
-        # Save the contents of the existing_tile_maps file to this variable
-        string_tile_list = existing_tile_maps_file.read()
+        # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method
+        string_tile_list = tile_map
 
         # ----------------------------------------------------------------------------------------
         # Cleaning the string
@@ -371,7 +373,7 @@ class DrawingTiles():
         print(export_list)
         
         # Open the existing tile maps and append the current list of tiles (only palette numbers)
-        with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
+        with open("V2/existing_tile_maps.txt", "a") as existing_tile_maps_file:
 
             # Add a line break at the end of each tile map save
             existing_tile_maps_file.write(str(export_list) + "\n")
