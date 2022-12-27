@@ -23,7 +23,7 @@ class Menu:
 
         # Holds all the existing tile maps
         self.existing_tile_maps_dict = {}
-        self.find_existing_tile_maps()
+
     # ----------------------------------------------------------------------------------------
     # Helper methods
 
