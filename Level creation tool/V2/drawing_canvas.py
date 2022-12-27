@@ -1,4 +1,4 @@
-import pygame, os, string, sys
+import pygame, os
 from settings import *
 from extra_functions import * 
 from button import Button

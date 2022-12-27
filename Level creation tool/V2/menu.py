@@ -18,6 +18,20 @@ class Menu:
         # The origin point should be (0, 0) at the beginning of the 
         self.origin_point = origin_point
 
+    # ----------------------------------------------------------------------------------------
+    # Helper methods
+
+    def mouse_position_updating(self):
+
+        # Retrieve the mouse position
+        self.mouse_position = pygame.mouse.get_pos()
+
+        # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
+        self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
+
+    # ----------------------------------------------------------------------------------------
+    # Loading methods
+
     def loading_tile_map_input(self, origin_point):
         
         # Set / update the origin point as an attribute (so that the rectangles are positioned properly in the case that the user moved the camera right)
@@ -100,11 +114,8 @@ class Menu:
             # ------------------------------------------------
             # Handle mouse input
 
-            # Retrieve the mouse position
-            self.mouse_position = pygame.mouse.get_pos()
-
-            # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
-            self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
+            # Update the mouse position and mouse rect
+            self.mouse_position_updating()
 
             # If the user has pressed the left click
             if pygame.mouse.get_pressed()[0]:
@@ -247,6 +258,9 @@ class Menu:
 
         # Return the tile map and the selected tile map's number to the drawing canvas / main program
         return [self.tile_list, self.existing_tile_map_selected[1]]
+    
+    # ----------------------------------------------------------------------------------------
+    # Saving methods
 
     def save_tile_map_input(self, origin_point):
 
@@ -295,11 +309,8 @@ class Menu:
             # ----------------------------------------------------------------------------------------
             # Handle mouse input
 
-            # Retrieve the mouse position
-            self.mouse_position = pygame.mouse.get_pos()
-
-            # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
-            self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
+            # Update the mouse position and mouse rect
+            self.mouse_position_updating()
 
             # If the user has pressed the left click
             if pygame.mouse.get_pressed()[0]:
