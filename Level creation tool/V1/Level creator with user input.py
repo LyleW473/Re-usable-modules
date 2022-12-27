@@ -50,10 +50,10 @@ show_exported_text = False # Determines whether we show the exported text or not
 
 
 # Load images
-eraser_image = pygame.image.load("-1.png").convert()
-first_image = pygame.image.load("1.png").convert_alpha()
-second_image = pygame.image.load("2.png").convert_alpha()
-empty_image = pygame.image.load("empty.png").convert()
+eraser_image = pygame.image.load("V1/-1.png").convert()
+first_image = pygame.image.load("V1/1.png").convert_alpha()
+second_image = pygame.image.load("V1/2.png").convert_alpha()
+empty_image = pygame.image.load("V1/empty.png").convert()
 
 # Start the basic set-up
 start_basic_setup = True
@@ -312,8 +312,8 @@ while run:
                     # Remove the last item inside the text, by keeping everything except the last element
                     user_text = user_text[:-1]
                 if event.key == K_RETURN:
-                    # Ensure that the user isn't trying to enter nothing
-                    if len(user_text) > 0:
+                    # Ensure that the user isn't trying to enter nothing and that they aren't trying to input 0
+                    if len(user_text) > 0 and int(user_text) != 0:
                         # If 500 MOD user_text has a remainder of 0 (meaning that it is divisible by that amount)
                         if 500 % int(user_text) == 0:
                             # Set the tile size to the user text

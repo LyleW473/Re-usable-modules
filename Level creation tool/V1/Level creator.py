@@ -1,6 +1,7 @@
 # Import modules
 import pygame, sys
 from pygame.locals import *
+from pygame import transform as pyt
 
 
 # Initialise pygame
@@ -23,10 +24,10 @@ GREY = (93,93,93)
 export_list_font = pygame.font.SysFont('Bebas Neue', 30)
 
 # Load images
-eraser_image = pygame.image.load("-1.png").convert()
-first_image = pygame.image.load("1.png").convert_alpha()
-second_image = pygame.image.load("2.png").convert_alpha()
-empty_image = pygame.image.load("empty.png").convert()
+eraser_image = pygame.image.load("V1/-1.png").convert()
+first_image = pygame.image.load("V1/1.png").convert_alpha()
+second_image = pygame.image.load("V1/2.png").convert_alpha()
+empty_image = pygame.image.load("V1/empty.png").convert()
 
 
 # Variables
