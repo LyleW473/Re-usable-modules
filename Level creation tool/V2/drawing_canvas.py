@@ -1,4 +1,4 @@
-import pygame, os
+import pygame, os, sys
 from settings import *
 from extra_functions import * 
 from button import Button
@@ -29,9 +29,10 @@ class PaletteTile(pygame.sprite.Sprite):
 class DrawingTiles():
     def __init__(self):
 
-        # Set the display as full screen
-        self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
-
+        # Set the display as the current display
+        self.screen = pygame.display.get_surface()
+        self.full_screen = False
+        
         # Define the point from which the drawing grid and tiles are drawn
         self.origin_point = pygame.math.Vector2(0, 0)
         
@@ -431,11 +432,13 @@ class DrawingTiles():
         # Define the menu x and y co-ordinates (Easier to modify positioning of the menu)
         tiles_menu_x = 25
         tiles_menu_y = 550
+        tiles_menu_width = 1415
+        tiles_menu_height = self.screen.get_height() - tiles_menu_y - 50
 
         # Body
-        pygame.draw.rect(self.screen, "gray20", (tiles_menu_x, tiles_menu_y, 1415, 400))
+        pygame.draw.rect(self.screen, "gray20", (tiles_menu_x, tiles_menu_y, tiles_menu_width, tiles_menu_height))
         # Outline
-        pygame.draw.rect(self.screen, "white", (tiles_menu_x, tiles_menu_y, 1415, 400), 5)
+        pygame.draw.rect(self.screen, "white", (tiles_menu_x, tiles_menu_y, tiles_menu_width, tiles_menu_height), 5)
 
         # ----------------------------------------------------------------------------------------
         # Text displaying the current tile map selected

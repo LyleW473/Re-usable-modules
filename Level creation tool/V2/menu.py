@@ -2,15 +2,15 @@ import pygame, sys, string
 from settings import *
 from button import Button
 from extra_functions import *
-from pygame import transform as pyt
 from pygame import image as pyi
 
 class Menu:
 
     def __init__(self, tile_size, origin_point, tile_list):
         
-        # Set the display as full screen
-        self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
+        # Set the display as the current display
+        self.screen = pygame.display.get_surface()
+        self.full_screen = False
 
         # Set the tile size to be the same as the tile size declared on the DrawingTiles class
         self.tile_size = tile_size
@@ -59,8 +59,8 @@ class Menu:
     # ----------------------------------------------------------------------------------------
     # Loading methods
 
-    def loading_tile_map_input(self, origin_point):
-        
+    def loading_tile_map_input(self, origin_point): 
+
         # Set / update the origin point as an attribute (so that the rectangles are positioned properly in the case that the user moved the camera right)
         self.origin_point = origin_point
 
@@ -84,6 +84,12 @@ class Menu:
         # Create a button to go back to the editor
         return_to_editor_button = Button((screen_width / 2) - 250 + abs(self.origin_point.x), user_input_rectangle.y + 250, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
 
+        # If the full screen attribute is True
+        if self.full_screen == True:
+            
+            # Set the screen to full screen
+            self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
+        
         # Continuously ask for user input 
         while True: 
             # ------------------------------------------------
