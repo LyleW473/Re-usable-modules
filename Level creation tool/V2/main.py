@@ -10,9 +10,17 @@ class Main:
 
         # Pygame set-up
         pygame.init()
+
+        # Set the caption
         pygame.display.set_caption("Level creator")
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
-        self.clock = pygame.time.Clock()    
+
+        # Set the display as full screen
+        self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
+
+        # Limit fps
+        self.clock = pygame.time.Clock()  
+
+        # Create a drawing canvas  
         self.drawing_canvas = DrawingTiles()
 
 
@@ -39,6 +47,7 @@ class Main:
             # -------------------------------------
             # Update display
             pygame.display.update() 
+
             # Limit FPS to 60
             self.clock.tick(60)
 

@@ -29,8 +29,11 @@ class PaletteTile(pygame.sprite.Sprite):
 class DrawingTiles():
     def __init__(self):
 
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
-        self.origin_point = pygame.math.Vector2(0, 0) # The point where the drawing grid and tiles are drawn from
+        # Set the display as full screen
+        self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
+
+        # Define the point from which the drawing grid and tiles are drawn
+        self.origin_point = pygame.math.Vector2(0, 0)
         
         # Create a transparency surface for the grid to be drawn onto
         self.transparency_surface = pygame.Surface((screen_width, screen_height))
@@ -116,7 +119,7 @@ class DrawingTiles():
                 i = 0
 
             # Create a new palette tile and add it to the palette tiles group
-            palette_tile = PaletteTile(50 + (100 * i), 500 + (j * 100), palette_tile_count)
+            palette_tile = PaletteTile(50 + (100 * i), 550 + 25 + (j * 100), palette_tile_count)
             self.palette_tiles_group.add(palette_tile)
             
             # Increment i index and the palette tile count
@@ -130,7 +133,9 @@ class DrawingTiles():
 
         # Calculate the number of lines for x and y
         number_of_lines_x = (screen_width / 2) / 32
-        number_of_lines_y = (screen_height / 2) / 32
+        
+        # Draws as many tiles as half the resolution can fit. (So in a 1080 resolution, 16 tiles of tile size 32 can fit inside (1080 / 2) resolution)
+        number_of_lines_y = ((screen_height / 2) - ( (screen_height / 2) % self.tile_size )) / self.tile_size
 
         for row in range(0, int(number_of_lines_y)):
             
@@ -164,7 +169,7 @@ class DrawingTiles():
 
             # Set/ create a new attribute e.g. self.export__tile_map_button, self.extend_drawing_tiles_button, etc.
             # Note: [:-4] removes the ".png" from the attribute name, all images are scaled to (64 x 64) pixels
-            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1500, 475 + (i * 80), pyt.scale(pyi.load(f"V2/graphics/buttons/main_editor/{list_of_buttons[i]}"), (64, 64))))
+            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1415 + 50, 550 + (i * 80), pyt.scale(pyi.load(f"V2/graphics/buttons/main_editor/{list_of_buttons[i]}"), (64, 64))))
 
             # Add the new attribute that was just created to the buttons group
             self.buttons_group.add(self.__getattribute__(list_of_buttons[i][:-4]))
@@ -193,6 +198,7 @@ class DrawingTiles():
                     row.pop()
 
     def reset_tile_map(self):
+        
         # For each row in the tile list
         for row in self.tile_list:
             # For each tile in each row
@@ -204,14 +210,16 @@ class DrawingTiles():
 
         # Calculate the number of lines for x and y
         number_of_lines_x = screen_width / 32
-        number_of_lines_y = (screen_height / 2) / 32
+        
+        # Draws as many lines as half the resolution can fit. (So in a 1080 resolution, 16 tiles of tile size 32 can fit inside (1080 / 2) resolution)
+        number_of_lines_y = ((screen_height / 2) - ( (screen_height / 2) % self.tile_size )) / self.tile_size
 
         # Vertical lines
         for i in range(1, int(number_of_lines_x) + 1):
-            pygame.draw.line(self.transparency_surface, "white", ((i * 32), 0), ((i * 32), 896 / 2), 2)
+            pygame.draw.line(self.transparency_surface, "white", ((i * 32), 0), ((i * 32), ((screen_height / 2) - ((screen_height / 2) % self.tile_size ))), 2)
 
         # Horizontal lines
-        for j in range(1, int(number_of_lines_y) + 1):
+        for j in range(1 , int(number_of_lines_y) + 1): 
             pygame.draw.line(self.transparency_surface, "white", (self.origin_point.x, (j * 32)), (screen_width, (j * 32)), 2)
 
         # Draw the transparency surface onto the main surface / screen
@@ -374,7 +382,7 @@ class DrawingTiles():
         # For every button in the buttons group
         for i, button in enumerate(self.buttons_group):
             # Draw the button onto the screen
-            button.draw(1500, 475 + (i * 80))
+            button.draw(1415 + 50, 550 + (i * 80))
 
     def draw_tiles(self):
 
@@ -409,11 +417,11 @@ class DrawingTiles():
                 i = 0
 
             # Draw an outline and "background" for each palette tile
-            pygame.draw.rect(self.screen, "gray33", (50 + (100 * i) - ((border_width - (self.tile_size * 2)) / 2) , 500 + (j * 100) - ((border_height - (self.tile_size * 2)) / 2), border_width, border_height) , 0)
-            pygame.draw.rect(self.screen, "black", (50 + (100 * i) - ((border_width - (self.tile_size * 2)) / 2) , 500 + (j * 100) - ((border_height - (self.tile_size * 2)) / 2), border_width, border_height) , border_line_thickness)
+            pygame.draw.rect(self.screen, "gray33", (50 + (100 * i) - ((border_width - (self.tile_size * 2)) / 2) , 550 + 25 + (j * 100) - ((border_height - (self.tile_size * 2)) / 2), border_width, border_height) , 0)
+            pygame.draw.rect(self.screen, "black", (50 + (100 * i) - ((border_width - (self.tile_size * 2)) / 2) , 550 + 25 + (j * 100) - ((border_height - (self.tile_size * 2)) / 2), border_width, border_height) , border_line_thickness)
 
             # Draw the palette tile onto the screen
-            palette_tile.draw(50 + (100 * i), 500 + (j * 100))
+            palette_tile.draw(50 + (100 * i), 550 + 25 + (j * 100))
 
             # Increment i index
             i += 1
@@ -422,12 +430,12 @@ class DrawingTiles():
 
         # Define the menu x and y co-ordinates (Easier to modify positioning of the menu)
         tiles_menu_x = 25
-        tiles_menu_y = 475
+        tiles_menu_y = 550
 
         # Body
-        pygame.draw.rect(self.screen, "gray20", (tiles_menu_x, tiles_menu_y, 1425, 400))
+        pygame.draw.rect(self.screen, "gray20", (tiles_menu_x, tiles_menu_y, 1415, 400))
         # Outline
-        pygame.draw.rect(self.screen, "white", (tiles_menu_x, tiles_menu_y, 1425, 400), 5)
+        pygame.draw.rect(self.screen, "white", (tiles_menu_x, tiles_menu_y, 1415, 400), 5)
 
         # ----------------------------------------------------------------------------------------
         # Text displaying the current tile map selected
@@ -436,10 +444,10 @@ class DrawingTiles():
         # If a tile map has been selected
         if hasattr(self, "existing_tile_map_selected"):
             # Draw a text indicating the number of the tile map selected
-            draw_alpha_text(f"Selected tile map:  {self.existing_tile_map_selected[1]}", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 20, self.screen, 110)
+            draw_alpha_text(f"Selected tile map:  {self.existing_tile_map_selected[1]}", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 25, self.screen, 110)
         else:
             # Draw a text indicating the number of the tile map selected
-            draw_alpha_text(f"Selected tile map:  None", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 20, self.screen, 110)
+            draw_alpha_text(f"Selected tile map:  None", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 25, self.screen, 110)
 
     def run(self):
 

@@ -9,8 +9,8 @@ class Menu:
 
     def __init__(self, tile_size, origin_point, tile_list):
         
-        # Set the display
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        # Set the display as full screen
+        self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
 
         # Set the tile size to be the same as the tile size declared on the DrawingTiles class
         self.tile_size = tile_size
