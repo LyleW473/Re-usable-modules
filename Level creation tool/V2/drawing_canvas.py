@@ -78,7 +78,7 @@ class DrawingTiles():
         # Menu
 
         # Create the menu, feeding in the tile size and origin point as parameters
-        self.menu = Menu(tile_size = self.tile_size, origin_point = self.origin_point)
+        self.menu = Menu(tile_size = self.tile_size, origin_point = self.origin_point, tile_list = self.tile_list)
 
     # ----------------------------------------------------------------------------------------
     # Initial set-up methods
@@ -313,11 +313,32 @@ class DrawingTiles():
             # If the user has made changes to the tile map
             if self.changes_made_to_tile_map == True:
 
-                # Automatically save progress on the current tile map selected
-                self.menu.automatically_save_progress()
+                # Automatically save progress on the current tile map selected, save the returned value into a variable
+                status = self.menu.automatically_save_progress()
                 
                 # Set the attribute self.changes_made_to_tile_map back to False
                 self.changes_made_to_tile_map = False
+
+                # If status is "Unsuccessful", it means that the user tried saving changes made onto a blank canvas, so a new tile map was created. Therefore, the tile map should be loaded up.
+                if status == "Unsuccessful":
+
+                    # Load the new tile map
+                    """ 
+                    - It loads up the last tile map inside the dictionary (because this should be the recently created tile map).
+                    - The tile map passed in should be a list containing the tile map, and the number of the tile map inside the file (which should be the last tile map in the dictionary)
+
+                    """
+                    # If the dictionary containing tile maps is not empty
+                    if len(self.menu.existing_tile_maps_dict) != 0:
+                        self.menu.load_existing_tile_map(tile_map = [ self.menu.existing_tile_maps_dict[len(self.menu.existing_tile_maps_dict)], len(self.menu.existing_tile_maps_dict) ] )
+
+                    # If the dictionary containing tile maps is empt
+                    else:
+                        # Create a new tile map
+                        self.menu.save_tile_map(automatically_save_variable = True)
+
+                    # Set the existing tile map selected to be the recently craeted tile map
+                    self.existing_tile_map_selected = [ self.menu.existing_tile_maps_dict[len(self.menu.existing_tile_maps_dict)], len(self.menu.existing_tile_maps_dict) ]
             
         # If the "a" key is being pressed and we aren't trying to go left, beyond the origin point
         if pygame.key.get_pressed()[pygame.K_a] and self.origin_point.x < 0:

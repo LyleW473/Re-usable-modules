@@ -7,7 +7,7 @@ from pygame import image as pyi
 
 class Menu:
 
-    def __init__(self, tile_size, origin_point):
+    def __init__(self, tile_size, origin_point, tile_list):
         
         # Set the display
         self.screen = pygame.display.set_mode((screen_width, screen_height))
@@ -15,36 +15,31 @@ class Menu:
         # Set the tile size to be the same as the tile size declared on the DrawingTiles class
         self.tile_size = tile_size
 
-        # The origin point should be (0, 0) at the beginning of the 
+        # The origin point should be (0, 0) upon instantiation
         self.origin_point = origin_point
 
+        # The tile list should be an empty tile map upon instantiation
+        self.tile_list = tile_list
+
+        # Holds all the existing tile maps
+        self.existing_tile_maps_dict = {}
+        self.find_existing_tile_maps()
     # ----------------------------------------------------------------------------------------
     # Helper methods
 
     def mouse_position_updating(self):
-
+        # Used to update the mouse position and mouse rect
+        
         # Retrieve the mouse position
         self.mouse_position = pygame.mouse.get_pos()
 
         # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
         self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
 
-    # ----------------------------------------------------------------------------------------
-    # Loading methods
+    def find_existing_tile_maps(self):
+        # Finds out the number of tile maps in the text file and updates the existing tile maps dictionary with the contents
 
-    def loading_tile_map_input(self, origin_point):
-        
-        # Set / update the origin point as an attribute (so that the rectangles are positioned properly in the case that the user moved the camera right)
-        self.origin_point = origin_point
-
-        # Set the mouse cursor as visible when asking for user input when loading a tile map
-        pygame.mouse.set_visible(True)
-    
-        existing_tile_maps_dict =  {} # Holds all of the existing tile maps
         tile_map_count = 0 # Holds the number of tile maps saved in the file
-
-        # ------------------------------------------------
-        # Find out the number of tile maps and save it to the dictionary
 
         # Open the existing tile maps file 
         with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
@@ -59,7 +54,23 @@ class Menu:
                     tile_map_count += 1
                     
                     # Create a new key:value pair in the existing tile maps dictionary, remove the \n at the end of each line
-                    existing_tile_maps_dict[tile_map_count] = line.strip("\n")
+                    self.existing_tile_maps_dict[tile_map_count] = line.strip("\n")
+
+    # ----------------------------------------------------------------------------------------
+    # Loading methods
+
+    def loading_tile_map_input(self, origin_point):
+        
+        # Set / update the origin point as an attribute (so that the rectangles are positioned properly in the case that the user moved the camera right)
+        self.origin_point = origin_point
+
+        # Set the mouse cursor as visible when asking for user input when loading a tile map
+        pygame.mouse.set_visible(True)
+
+        # ------------------------------------------------
+        # Find out the number of tile maps and save it to the dictionary
+        
+        self.find_existing_tile_maps()
 
         # ------------------------------------------------
         # Handling user input for choosing tile map
@@ -88,7 +99,7 @@ class Menu:
             draw_text(user_input_string, user_input_font, "white", user_input_rectangle.x + 10, user_input_rectangle.y + 10, self.screen)
 
             # Display the number of tile maps text onto the screen
-            draw_text(f"There are {len(existing_tile_maps_dict)} tile maps.", user_input_font, "dodgerblue4", user_input_rectangle.x - 90, user_input_rectangle.y - 160, self.screen)
+            draw_text(f"There are {len(self.existing_tile_maps_dict)} tile maps.", user_input_font, "dodgerblue4", user_input_rectangle.x - 90, user_input_rectangle.y - 160, self.screen)
 
             # Draw a rectangle for the user input 
             pygame.draw.rect(self.screen, "black", user_input_rectangle, 5)
@@ -136,8 +147,8 @@ class Menu:
                 # If the user pressed a key
                 if event.type == pygame.KEYDOWN:
 
-                    # If the key that was pressed is a number and the tile map number selected is a single digit number
-                    if event.unicode in string.digits and len(user_input_string) < 1:
+                    # If the key that was pressed is a number and the tile map number selected is a double digit number
+                    if event.unicode in string.digits and len(user_input_string) < 2:
                         # Concatenate the digit onto user_input_string
                         user_input_string += event.unicode
 
@@ -150,7 +161,7 @@ class Menu:
                     if event.key == pygame.K_RETURN and len(user_input_string) > 0 and invalid_input == False:
 
                         # If the tile map selected is a key in the existing tile maps dictionary
-                        if int(user_input_string) in existing_tile_maps_dict.keys():
+                        if int(user_input_string) in self.existing_tile_maps_dict.keys():
 
                             # Set the mouse cursor invisible again
                             pygame.mouse.set_visible(False)
@@ -158,11 +169,11 @@ class Menu:
                             # Output a message in the terminal to indicate that the tile map selected is being loaded
                             print(f"Loading tilemap {int(user_input_string)}...")
                             
-                            # Set the 
-                            self.existing_tile_map_selected = [ existing_tile_maps_dict[int(user_input_string)], int(user_input_string) ]
+                            # Set the existing tile map selected as the tilemap and the user input string
+                            self.existing_tile_map_selected = [ self.existing_tile_maps_dict[int(user_input_string)], int(user_input_string) ]
 
                             # Return a list containing: the tile map (this is fed into the load_existing_tile_map method) and which tile map number it is
-                            return [ existing_tile_maps_dict[int(user_input_string)], int(user_input_string) ]
+                            return [ self.existing_tile_maps_dict[int(user_input_string)], int(user_input_string) ]
 
 
                         # If the tile map selected isn't a key in the existing tile maps dictionary
@@ -377,13 +388,9 @@ class Menu:
         # If the automatically save variable has been set to True but the user hasn't selected an existing tile map
         elif automatically_save_variable == True and hasattr(self, "existing_tile_map_selected") == False:
 
-            # print("Saving progress onto a new tile map")
+            # Save the progress as a new tile map
+            save_as_new_tile_map = True
 
-            # # Save the progress as a new tile map
-            # save_as_new_tile_map = True
-
-            print("Cannot save")
-            return 
         # ----------------------------------------------------------------------------------------
         # Manual saving with the save button
 
@@ -454,7 +461,21 @@ class Menu:
                 # Output a message in the terminal
                 print("Saved as new file.")
 
+        # Update the existing tile maps dictionary
+        # Note: This is because inside the main program, if there were previously no tile maps and you tried saving a new tile map, an empty dictionary would be referenced
+        self.find_existing_tile_maps()
+
+        # If the automatically save variable is True and a new tile map was created, it means that the system automatically saved progress without an existing tile map being selected
+        if automatically_save_variable == True and save_as_new_tile_map == True:
+            return "Unsuccessful"
+
     def automatically_save_progress(self):
         
         # Automatically save the tile map
-        self.save_tile_map(automatically_save_variable = True)
+        status = self.save_tile_map(automatically_save_variable = True)
+
+        # If the status is "Unsuccessful"
+        if status == "Unsuccessful":
+
+            # Return "Unsuccessful" to the drawing canvas / main program
+            return "Unsuccessful"
