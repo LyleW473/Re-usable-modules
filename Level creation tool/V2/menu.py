@@ -362,10 +362,35 @@ class Menu:
             # Update the display
             pygame.display.update()
 
-    def save_tile_map(self):
+    def save_tile_map(self, automatically_save_variable = None):
 
-        # Variable that stores the user's choice of whether to overwrite the existing tile map selected or create a new tile map
-        save_as_new_tile_map = self.save_tile_map_input(origin_point = self.origin_point)
+        # ----------------------------------------------------------------------------------------
+        # Automatic saving
+
+        # If the automatically save variable has been set to True and the user has selected an existing tile map
+        if automatically_save_variable == True and hasattr(self, "existing_tile_map_selected") == True:
+            # Save the progress onto the current tile map selected
+            save_as_new_tile_map = False
+
+            print("Progress has been saved.")
+
+        # If the automatically save variable has been set to True but the user hasn't selected an existing tile map
+        elif automatically_save_variable == True and hasattr(self, "existing_tile_map_selected") == False:
+
+            # print("Saving progress onto a new tile map")
+
+            # # Save the progress as a new tile map
+            # save_as_new_tile_map = True
+
+            print("Cannot save")
+            return 
+        # ----------------------------------------------------------------------------------------
+        # Manual saving with the save button
+
+        # If this was manually called by pressing the save button
+        else:
+            # Variable that stores the user's choice of whether to overwrite the existing tile map selected or create a new tile map
+            save_as_new_tile_map = self.save_tile_map_input(origin_point = self.origin_point)
         
         # Check if the player pressed clicked the return button, if it did then don't execute the following code
         if save_as_new_tile_map == None:
@@ -428,3 +453,8 @@ class Menu:
 
                 # Output a message in the terminal
                 print("Saved as new file.")
+
+    def automatically_save_progress(self):
+        
+        # Automatically save the tile map
+        self.save_tile_map(automatically_save_variable = True)

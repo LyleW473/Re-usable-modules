@@ -62,6 +62,9 @@ class DrawingTiles():
         # Create a new tile map (A new tile map is created by default upon loading the program)
         self.create_new_tile_map()
 
+        # Attribute used to track whenever changes have been made to the tile map so that progress can be automatically saved
+        self.changes_made_to_tile_map = False
+
         # ----------------------------------------------------------------------------------------
         # Buttons
         
@@ -223,7 +226,7 @@ class DrawingTiles():
         self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
 
         # If the left mouse button is pressed
-        if pygame.mouse.get_pressed()[0]:
+        if pygame.mouse.get_pressed()[0] == 1:
 
             # ----------------------------------------------------------------------------------------
             # Changing the drawing tile
@@ -242,6 +245,9 @@ class DrawingTiles():
 
                         # Set the drawing tile's palette number to be the current selected palette tile number
                         tile[1] = self.selected_palette_number
+
+                        # Indicate that changes have been made to the tile map
+                        self.changes_made_to_tile_map = True
 
             # ----------------------------------------------------------------------------------------
             # Changing the palette tile selected
@@ -301,6 +307,18 @@ class DrawingTiles():
                 # Record the last time that a button was clicked to be now
                 self.button_clicked_time = pygame.time.get_ticks()
 
+        # If the user has let go of the left mouse button / the left mouse button isn't being pressed
+        if pygame.mouse.get_pressed()[0] == 0:
+            
+            # If the user has made changes to the tile map
+            if self.changes_made_to_tile_map == True:
+
+                # Automatically save progress on the current tile map selected
+                self.menu.automatically_save_progress()
+                
+                # Set the attribute self.changes_made_to_tile_map back to False
+                self.changes_made_to_tile_map = False
+            
         # If the "a" key is being pressed and we aren't trying to go left, beyond the origin point
         if pygame.key.get_pressed()[pygame.K_a] and self.origin_point.x < 0:
 
