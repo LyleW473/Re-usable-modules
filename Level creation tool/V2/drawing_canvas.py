@@ -294,11 +294,6 @@ class DrawingTiles():
                             # Set the tile list as the returned tile map
                             self.tile_list = self.existing_tile_map_selected[0]
 
-                # If the mouse rect collides with the rect of the save tile map button
-                if self.mouse_rect.colliderect(self.save_tile_map_button.rect):
-                    # Save the tile map
-                    self.menu.save_tile_map()    
-
                 # If the mouse rect collides with the rect of the reset tile map button
                 if self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
                     # Reset the tile map
