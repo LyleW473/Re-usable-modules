@@ -49,9 +49,14 @@ class Menu:
 
         # ------------------------------------------- 
         # Manage tile maps menu 
+        
+        # Images
+        self.select_button_image = pyi.load("V2/graphics/buttons/user_input/select_button.png")
+        self.swap_button_image =  pyi.load("V2/graphics/buttons/user_input/swap_button.png")
+        self.delete_button_image = pyi.load("V2/graphics/buttons/user_input/delete_button.png")
 
-        # Create the buttons for this menu
-        self.create_buttons()
+        # Font
+        self.current_page_font = pygame.font.SysFont("Bahnschrift", 30)
 
     # ----------------------------------------------------------------------------------------
     # Helper methods
@@ -110,26 +115,34 @@ class Menu:
         # Draw the return to editor button
         self.return_to_editor_button.draw((screen_width / 2) - 250, self.user_input_rectangle.y + 400)
     
-    # ----------------------------
+    # ---------------------------------
     # Specific to manage tile maps menu
 
-    def create_buttons(self):   
-        
+    def create_buttons(self):
+
+        # Define a variable which will increment, drawing the buttons at the next page if there are 8 on one page already
+        next_page_y = 0
+
         # Create a group for the buttons inside the manage tile maps
         self.manage_tile_maps_buttons_group = pygame.sprite.Group()
 
-        # Do this for 5 tile maps
-        for i in range(0, 5):
-            
-            # Create a select, swap and delete button for each tile map
-            select_button = Button(250, self.menu_origin_point.y + 100 + (i * 100), pyi.load("V2/graphics/buttons/user_input/select_button.png")) 
-            swap_button = Button(250 + select_button.image.get_width() + 50, self.menu_origin_point.y + 100 + (i * 100) , pyi.load("V2/graphics/buttons/user_input/swap_button.png")) 
-            delete_button = Button(250 + swap_button.image.get_width() + 50, self.menu_origin_point.y + 100 + (i * 100) , pyi.load("V2/graphics/buttons/user_input/swap_button.png")) 
+        # Do this for all tile maps inside the existing tile maps dictionary
+        for i in range(0, len(self.existing_tile_maps_dict)):
 
+            # If there are 8 buttons on one page already
+            if i % 8 == 0 and i != 0:   
+                # Start drawing buttons on the next page
+                next_page_y += (screen_height - 800) 
+
+            # Create a select, swap and delete button for each tile map
+            select_button = Button(250, self.menu_origin_point.y + 100 + (i * 100) + next_page_y, self.select_button_image) 
+            swap_button = Button(select_button.rect.x + select_button.image.get_width(), self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.swap_button_image) 
+            delete_button = Button(swap_button.rect.x + select_button.image.get_width(), self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.delete_button_image) 
+
+            # Add the buttons to the group
             self.manage_tile_maps_buttons_group.add(select_button)
             self.manage_tile_maps_buttons_group.add(swap_button)
             self.manage_tile_maps_buttons_group.add(delete_button)
-
 
     def draw_buttons(self):
 
@@ -137,7 +150,26 @@ class Menu:
         for button in self.manage_tile_maps_buttons_group:
             # Draw the button at these positions
             button.draw(button.rect.x, button.rect.y - abs(self.menu_origin_point.y))
+    
+    def calculate_pages(self):
 
+        # Calculate the number of pages there are
+        remainder = len(self.existing_tile_maps_dict) % 8 
+
+        # If the remainder is greater than 0
+        if remainder > 0:
+            # The number of pages would be the number of tile maps divided by 8 and an extra page
+            # If there were 22 tile maps, we would need 3 pages)
+            self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8) + 1
+
+        # If the remainder is 0
+        elif remainder == 0:
+            # The number of pages would be the number of tile maps divided by 8
+            # If there was 16 tile maps, we would need 2 pages
+            self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8)      
+
+        # Create an attribute which is used to track which page the user is on
+        self.current_page = 1
 
     # ----------------------------------------------------------------------------------------
     # Loading methods
@@ -198,7 +230,7 @@ class Menu:
                 # Reset the user input string (So that the next time the user enters the load menu, the string will be empty)
                 self.user_input_string = ""
 
-                # Return None (this will mean that nothing happens inside the save_tile_map method)
+                # Exit the method
                 return None
      
     def load_existing_tile_map(self, tile_map):
@@ -382,11 +414,17 @@ class Menu:
         self.editor.automatically_save_progress = False
 
     # ----------------------------------------------------------------------------------------
-    # Saving methods
-    def manage_tile_maps_input(self):
-        
+    # Managing tile maps menu 
+
+    def manage_tile_maps_menu(self):
+        # ------------------------------------------------
+        # Main display
+
         # Draw the buttons for this menu
         self.draw_buttons()
+
+        # Draw text displaying what page the user is on
+        draw_text(f"Current page: {self.current_page}", self.current_page_font, "white", 50, screen_height - 100, self.screen)
 
         # ------------------------------------------------
         # Handle mouse input
@@ -406,8 +444,11 @@ class Menu:
 
                 # Reset the attribute that states whether the load menu has been updated
                 self.manage_tile_maps_menu_updated = False
+
+                # Reset the menu origin point's y co-ordinate, so that the user starts at the top of the menu again
+                self.menu_origin_point.y = 0
                 
-                # Return None (this will mean that nothing happens inside the save_tile_map method)
+                # Exit the method
                 return None
 
 
@@ -513,6 +554,30 @@ class Menu:
                             # Record the time that the user got the 
                             self.invalid_input_time = pygame.time.get_ticks()
 
+                # -------------------------------------------------
+                # Manage tile maps menu events
+
+                # If we are in the manage tile maps menu          
+                if self.editor.show_manage_tile_maps_menu == True and self.editor.show_editor == False:
+                    
+                    # If the user is pressing the "w" key and is not trying to move up when they are at the top of the menu
+                    if event.key == pygame.K_w and self.menu_origin_point.y > 0:
+
+                        # Move up the menu
+                        self.menu_origin_point.y -= screen_height
+
+                        # Decrement the current page we are on
+                        self.current_page -= 1
+
+                    # If the user is pressing the "s" key and the user is not on the last page
+                    if event.key == pygame.K_s and self.current_page != self.num_of_pages:
+
+                        # Move down the menu
+                        self.menu_origin_point.y += screen_height
+
+                        # Increment the current page we are on
+                        self.current_page += 1
+
     def run(self):
 
         # Run the event loop
@@ -561,12 +626,18 @@ class Menu:
 
                     # Update the manage tile maps menu with all the necessary information once
                     self.update_menus()
-                    
+
                     # The manage tile maps menu is now updated
                     self.manage_tile_maps_menu_updated = True
-                
+
+                    # Create the buttons for this menu (This must be done each time the menu is loaded as the user may have created a new tile map)
+                    self.create_buttons()
+
+                    # Calculate the number of pages there are according to how many tile maps there are
+                    self.calculate_pages()
+                    
                 # Show the manage tile maps menu
-                self.manage_tile_maps_input()
+                self.manage_tile_maps_menu()
 
         # ----------------------------------------------------------------------------------------
         # Automatically saving

@@ -9,7 +9,7 @@ class Button(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x 
         self.rect.y = y
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        self.screen = pygame.display.get_surface()
 
     def draw(self, x, y):
         self.screen.blit(self.image, (x, y))
