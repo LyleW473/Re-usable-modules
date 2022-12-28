@@ -16,14 +16,24 @@ class Menu:
         # Holds all the existing tile maps
         self.existing_tile_maps_dict = {}
 
+        # Define the point from which the drawing grid and tiles are drawn
+        self.origin_point = pygame.math.Vector2(0, 0)
+
+        # Define the point from which the buttons inside the manage tile maps menu are drawn from
+        self.menu_origin_point = pygame.math.Vector2(0, 0)
         # -------------------------------------------
         # Create the editor
 
         self.editor = Editor()
 
         # ------------------------------------------- 
+        # MENUS
+
+        self.manage_tile_maps_menu_updated = False
+        self.load_tile_maps_menu_updated = False
+
+        # ------------------------------------------- 
         # Load menu
-        self.origin_point = pygame.math.Vector2(0, 0)
 
         # Define an empty user input string, font and the user input box
         self.user_input_string = ""
@@ -35,8 +45,13 @@ class Menu:
         self.invalid_input_time = 0
 
         # Buttons
-        self.return_to_editor_button = Button((screen_width / 2) - 250, self.user_input_rectangle.y + 250, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
+        self.return_to_editor_button = Button((screen_width / 2) - 250, self.menu_origin_point.y + self.user_input_rectangle.y + 400, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
 
+        # ------------------------------------------- 
+        # Manage tile maps menu 
+
+        # Create the buttons for this menu
+        self.create_buttons()
 
     # ----------------------------------------------------------------------------------------
     # Helper methods
@@ -68,18 +83,15 @@ class Menu:
                     tile_map_count += 1
                     
                     # Create a new key:value pair in the existing tile maps dictionary, remove the \n at the end of each line
-                    self.existing_tile_maps_dict[tile_map_count] = line.strip("\n")
+                    self.existing_tile_maps_dict[tile_map_count] = line.strip("\n")          
 
-    def update_origin_point(self, origin_point):
+    def update_menus(self):
+        
+        # Update the origin point for the menus (to be the same as the editor origin point so that the button rects are accurate)
+        self.origin_point = self.editor.origin_point
 
-        # Set the origin point the same as the origin point in the editor
-        self.origin_point = origin_point
-
-    # ----------------------------------------------------------------------------------------
-    # Loading methods
-
-    def loading_tile_map_input(self):
-        # Note: The rest of the code involving interaction with the user input rectangle is within the event loop method
+        # Find out the number of tile maps and save it to the dictionary
+        self.find_existing_tile_maps()
 
         # Set / update the button positions (so that the rects are positioned properly in the case that the user moved the camera right)
         self.return_to_editor_button.rect.x = abs(self.origin_point.x) + (screen_width / 2) - 250
@@ -87,15 +99,55 @@ class Menu:
         # Set the mouse cursor as visible when asking for user input when loading a tile map
         pygame.mouse.set_visible(True)
 
-        # ------------------------------------------------
-        # Find out the number of tile maps and save it to the dictionary
-        self.find_existing_tile_maps()
+    def execute_common_menu_functionality(self):
+        
+        # Fill the screen with grey
+        self.screen.fill("gray17")
+
+        # Update the mouse position and mouse rect
+        self.mouse_position_updating()
+
+        # Draw the return to editor button
+        self.return_to_editor_button.draw((screen_width / 2) - 250, self.user_input_rectangle.y + 400)
+    
+    # ----------------------------
+    # Specific to manage tile maps menu
+
+    def create_buttons(self):   
+        
+        # Create a group for the buttons inside the manage tile maps
+        self.manage_tile_maps_buttons_group = pygame.sprite.Group()
+
+        # Do this for 5 tile maps
+        for i in range(0, 5):
+            
+            # Create a select, swap and delete button for each tile map
+            select_button = Button(250, self.menu_origin_point.y + 100 + (i * 100), pyi.load("V2/graphics/buttons/user_input/select_button.png")) 
+            swap_button = Button(250 + select_button.image.get_width() + 50, self.menu_origin_point.y + 100 + (i * 100) , pyi.load("V2/graphics/buttons/user_input/swap_button.png")) 
+            delete_button = Button(250 + swap_button.image.get_width() + 50, self.menu_origin_point.y + 100 + (i * 100) , pyi.load("V2/graphics/buttons/user_input/swap_button.png")) 
+
+            self.manage_tile_maps_buttons_group.add(select_button)
+            self.manage_tile_maps_buttons_group.add(swap_button)
+            self.manage_tile_maps_buttons_group.add(delete_button)
+
+
+    def draw_buttons(self):
+
+        # For each button in the manage tile maps buttons group
+        for button in self.manage_tile_maps_buttons_group:
+            # Draw the button at these positions
+            button.draw(button.rect.x, button.rect.y - abs(self.menu_origin_point.y))
+
+
+    # ----------------------------------------------------------------------------------------
+    # Loading methods
+
+    def loading_tile_map_input(self):
+        # Note: The rest of the code involving interaction with the user input rectangle is within the event loop method
+        # Note 2: Common functionality with other menus is within the self.execute_common_menu_functionality method
 
         # ------------------------------------------------
         # Menu display
-
-        # Fill the screen with grey
-        self.screen.fill("gray17") 
 
         # Display the instructions onto the screen
         draw_text("Please enter a tile map", self.user_input_font, "white", self.user_input_rectangle.x - 100, self.user_input_rectangle.y - 60, self.screen)
@@ -108,9 +160,6 @@ class Menu:
 
         # Draw a rectangle for the user input 
         pygame.draw.rect(self.screen, "black", self.user_input_rectangle, 5)
-
-        # Draw the return to editor button
-        self.return_to_editor_button.draw((screen_width / 2) - 250, self.user_input_rectangle.y + 250)
 
         # If the user entered an invalid tile map
         if self.invalid_input == True:
@@ -130,9 +179,6 @@ class Menu:
         # ------------------------------------------------
         # Handle mouse input
 
-        # Update the mouse position and mouse rect
-        self.mouse_position_updating()
-
         # If the user has pressed the left click
         if pygame.mouse.get_pressed()[0]:
 
@@ -146,6 +192,9 @@ class Menu:
                 self.editor.show_editor = True
                 self.editor.show_load_menu = False
 
+                # Reset the attribute that states whether the load menu has been updated
+                self.load_tile_maps_menu_updated = False
+                
                 # Reset the user input string (So that the next time the user enters the load menu, the string will be empty)
                 self.user_input_string = ""
 
@@ -153,7 +202,7 @@ class Menu:
                 return None
      
     def load_existing_tile_map(self, tile_map):
-        
+
         # Create an empty tile list to hold the final tile map
         tile_list = []
 
@@ -332,6 +381,36 @@ class Menu:
         # Set this attribute back to False so that we stop automatically saving progress for now
         self.editor.automatically_save_progress = False
 
+    # ----------------------------------------------------------------------------------------
+    # Saving methods
+    def manage_tile_maps_input(self):
+        
+        # Draw the buttons for this menu
+        self.draw_buttons()
+
+        # ------------------------------------------------
+        # Handle mouse input
+
+        # If the user has pressed the left click
+        if pygame.mouse.get_pressed()[0]:
+
+            # If the mouse rect collides with the rect of the save as new tile map button
+            if self.mouse_rect.colliderect(self.return_to_editor_button.rect):
+
+                # Set the mouse cursor invisible again
+                pygame.mouse.set_visible(False)
+
+                # Show the editor and stop showing the load menu
+                self.editor.show_editor = True
+                self.editor.show_manage_tile_maps_menu = False
+
+                # Reset the attribute that states whether the load menu has been updated
+                self.manage_tile_maps_menu_updated = False
+                
+                # Return None (this will mean that nothing happens inside the save_tile_map method)
+                return None
+
+
     def event_loop(self):
 
         # Event handler
@@ -416,6 +495,9 @@ class Menu:
                             # Load the existing tile map into the editor
                             self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[int(self.user_input_string)])
 
+                            # Reset the attribute that states whether the load menu has been updated
+                            self.load_tile_maps_menu_updated = False
+
                             # Reset the user input string so that the next time the user loads the menu, the text will be empty
                             self.user_input_string = ""
 
@@ -436,6 +518,9 @@ class Menu:
         # Run the event loop
         self.event_loop()
         
+        # ----------------------------------------------------------------------------------------
+        # Program states
+
         # If we need to show the editor
         if self.editor.show_editor == True:
 
@@ -444,15 +529,44 @@ class Menu:
 
         # If we don't need to show the editor
         else:
+            
+            # ----------------------------------------------------------------------------------------
+            # All menus
 
-            # Update the origin point for the menus (so that the button rects are accurate)
-            self.update_origin_point(origin_point = self.editor.origin_point)
+            # Execute common functionality across all menus
+            self.execute_common_menu_functionality()
+       
+            # ----------------------------------------------------------------------------------------
+             # Specific to each menus
 
             # If we need to show the load menu
-            if self.editor.show_load_menu == True:
+            if self.editor.show_load_menu == True:  
 
-                # Ask for input
-                self.loading_tile_map_input()
+                # If the load menu hasn't been updated yet
+                if self.load_tile_maps_menu_updated == False:
+
+                    # Update the load tile maps menu with all the necessary information once
+                    self.update_menus()
+                    
+                    # The load tile maps menu is now updated
+                    self.load_tile_maps_menu_updated = True
+
+                # Show the load tile maps menu
+                self.loading_tile_map_input()    
+
+            elif self.editor.show_manage_tile_maps_menu == True:
+
+                # If the manage tile maps menu hasn't been updated yet
+                if self.manage_tile_maps_menu_updated == False:
+
+                    # Update the manage tile maps menu with all the necessary information once
+                    self.update_menus()
+                    
+                    # The manage tile maps menu is now updated
+                    self.manage_tile_maps_menu_updated = True
+                
+                # Show the manage tile maps menu
+                self.manage_tile_maps_input()
 
         # ----------------------------------------------------------------------------------------
         # Automatically saving
@@ -462,103 +576,3 @@ class Menu:
             
             # Save the progress onto the tile maps text file
             self.automatically_save_progress()
-
-    # def manage_tile_maps(self, origin_point):
-
-    #     # Set / update the origin point as an attribute (so that the rectangles are positioned properly in the case that the user moved the camera right)
-    #     self.origin_point = origin_point
-
-    #     # Set the mouse cursor as visible when asking for user input when loading a tile map
-    #     pygame.mouse.set_visible(True)
-
-    #     # Create the buttons for this menu
-    #     # Note: The buttons are (500 x 125) pixels
-    #     # Define positioning (Easy to modify)
-    #     button_x_position = (screen_width / 2) - 250
-    #     button_y_position = 250
-
-    #     save_as_new_tile_map_button = Button(button_x_position + abs(self.origin_point.x), button_y_position, pyi.load("V2/graphics/buttons/user_input/save_as_new_tile_map_button.png"))
-    #     overwrite_selected_tile_map_button = Button(button_x_position + abs(self.origin_point.x), button_y_position + 150, pyi.load("V2/graphics/buttons/user_input/overwrite_selected_tile_map_button.png"))
-    #     return_to_editor_button = Button(button_x_position + abs(self.origin_point.x), button_y_position + 300, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
-        
-    #     # Define a font 
-    #     existing_tile_map_selected_font = pygame.font.SysFont("Bahnschrift", 40)
-
-    #     # Continuously ask for user input 
-    #     while True:         
-            
-    #         # ----------------------------------------------------------------------------------------
-    #         # Display:
-
-    #         # Fill the screen with grey
-    #         self.screen.fill("gray17") 
-
-    #         # Draw the buttons on screen
-    #         save_as_new_tile_map_button.draw(button_x_position, button_y_position)
-    #         overwrite_selected_tile_map_button.draw(button_x_position, button_y_position + 150)
-    #         return_to_editor_button.draw(button_x_position, button_y_position + 300)
-
-    #         # If a tile map has been selected
-    #         if hasattr(self, "existing_tile_map_selected"):
-    #             # Draw a text indicating the number of the tile map selected
-    #             draw_text(f"Selected tile map: {self.existing_tile_map_selected[1]}", existing_tile_map_selected_font, "white", button_x_position + 40 , button_y_position - 80, self.screen)
-    #         # Otherwise
-    #         else:
-    #             # Draw a text indicating that there is no tile map selected
-    #             draw_text("Selected tile map: None", existing_tile_map_selected_font, "white", button_x_position + 40 , button_y_position - 80, self.screen)
-
-    #         # ----------------------------------------------------------------------------------------
-    #         # Handle mouse input
-
-    #         # Update the mouse position and mouse rect
-    #         self.mouse_position_updating()
-
-    #         # If the user has pressed the left click
-    #         if pygame.mouse.get_pressed()[0]:
-
-    #             # If the mouse rect collides with the rect of the save as new tile map button
-    #             if self.mouse_rect.colliderect(save_as_new_tile_map_button.rect):
-
-    #                 # Set the mouse cursor invisible again
-    #                 pygame.mouse.set_visible(False)
-
-    #                 # Return True, meaning that the user wants to save the current tile map as a new tile map
-    #                 return True
-
-    #             # If the mouse rect collides with the rect of the overwrite selected tile map button
-    #             elif self.mouse_rect.colliderect(overwrite_selected_tile_map_button.rect):
-                    
-    #                 # If there is an attribute called self.existing_tile_map_selected, it means the user has chosen a tile map to overwrite
-    #                 if hasattr(self, "existing_tile_map_selected"):
-
-    #                     # Set the mouse cursor invisible again
-    #                     pygame.mouse.set_visible(False)
-
-    #                     # Return False, meaning that the user wants to save it onto the existing tile map selected / loaded
-    #                     return False
-
-    #                 # Otherwise:
-    #                 else:
-    #                     print("You have not selected a tile map to overwrite")
-                
-    #             # If the mouse rect collides with the rect of the return to editor button
-    #             elif self.mouse_rect.colliderect(return_to_editor_button.rect):
-
-    #                 # Set the mouse cursor invisible again
-    #                 pygame.mouse.set_visible(False)
-
-    #                 # Return None (this will mean that nothing happens inside the save_tile_map method)
-    #                 return None
-
-
-    #         # Event handler
-    #         for event in pygame.event.get():
-
-    #             # If the exit button was pressed
-    #             if event.type == pygame.QUIT:
-    #                 # Close the program
-    #                 pygame.quit()
-    #                 sys.exit()
-
-    #         # Update the display
-    #         pygame.display.update()

@@ -83,6 +83,7 @@ class Editor():
 
         self.show_editor = True
         self.show_load_menu = False
+        self.show_manage_tile_maps_menu = False
 
     # ----------------------------------------------------------------------------------------
     # Initial set-up methods
@@ -297,7 +298,15 @@ class Editor():
                     if os.path.getsize("V2/existing_tile_maps.txt") > 0:
                         # Stop showing the editor
                         self.show_editor = False
+                        # Show the load menu
                         self.show_load_menu = True
+
+                # If the mouse rect collides with the rect of the manage tile maps button
+                if self.mouse_rect.colliderect(self.manage_tile_maps_button.rect):
+                        # Stop showing the editor
+                        self.show_editor = False
+                        # Show the manage tile maps menu
+                        self.show_manage_tile_maps_menu = True
 
                 # If the mouse rect collides with the rect of the reset tile map button
                 if self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
