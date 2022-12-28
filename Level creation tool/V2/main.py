@@ -15,7 +15,7 @@ class Main:
         pygame.display.set_caption("Level creator")
 
         # Set the display as full screen
-        self.screen = pygame.display.set_mode((screen_width, screen_height - 50), pygame.RESIZABLE) # -50 because of the title bar at the top of the screen
+        self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
 
         # Create an object to track time
         self.clock = pygame.time.Clock()  

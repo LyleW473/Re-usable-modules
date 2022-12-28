@@ -11,7 +11,7 @@ class Menu:
         
         # Set the display as the current display
         self.screen = pygame.display.get_surface()
-        self.full_screen = False
+        self.full_screen = True
 
         # Holds all the existing tile maps
         self.existing_tile_maps_dict = {}
@@ -45,15 +45,15 @@ class Menu:
         self.invalid_input_time = 0
 
         # Buttons
-        self.return_to_editor_button = Button((screen_width / 2) - 250, self.menu_origin_point.y + self.user_input_rectangle.y + 400, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
+        self.return_to_editor_button = Button((screen_width / 2) - 250, self.menu_origin_point.y + self.user_input_rectangle.y + 400, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png").convert())
 
         # ------------------------------------------- 
         # Manage tile maps menu 
         
         # Images
-        self.select_button_image = pyi.load("V2/graphics/buttons/user_input/select_button.png")
-        self.swap_button_image =  pyi.load("V2/graphics/buttons/user_input/swap_button.png")
-        self.delete_button_image = pyi.load("V2/graphics/buttons/user_input/delete_button.png")
+        self.select_button_image = pyi.load("V2/graphics/buttons/user_input/select_button.png").convert()
+        self.swap_button_image =  pyi.load("V2/graphics/buttons/user_input/swap_button.png").convert()
+        self.delete_button_image = pyi.load("V2/graphics/buttons/user_input/delete_button.png").convert()
 
         # Font
         self.current_page_font = pygame.font.SysFont("Bahnschrift", 30)
@@ -98,8 +98,9 @@ class Menu:
         # Find out the number of tile maps and save it to the dictionary
         self.find_existing_tile_maps()
 
-        # Set / update the button positions (so that the rects are positioned properly in the case that the user moved the camera right)
+        # Set / update the button positions (so that the rects are positioned properly in the case that the user moved the camera right or the user has exited full screen)
         self.return_to_editor_button.rect.x = abs(self.origin_point.x) + (screen_width / 2) - 250
+        self.return_to_editor_button.rect.y = self.screen.get_height() - self.return_to_editor_button.image.get_height() - 50
 
         # Set the mouse cursor as visible when asking for user input when loading a tile map
         pygame.mouse.set_visible(True)
@@ -113,8 +114,8 @@ class Menu:
         self.mouse_position_updating()
 
         # Draw the return to editor button
-        self.return_to_editor_button.draw((screen_width / 2) - 250, self.user_input_rectangle.y + 400)
-    
+        self.return_to_editor_button.draw((screen_width / 2) - 250, self.screen.get_height() - self.return_to_editor_button.image.get_height() - 50)
+
     # ---------------------------------
     # Specific to manage tile maps menu
 
@@ -424,7 +425,7 @@ class Menu:
         self.draw_buttons()
 
         # Draw text displaying what page the user is on
-        draw_text(f"Current page: {self.current_page}", self.current_page_font, "white", 50, screen_height - 100, self.screen)
+        draw_text(f"Current page: {self.current_page}", self.current_page_font, "white", 50, self.screen.get_height() - 80, self.screen)
 
         # ------------------------------------------------
         # Handle mouse input

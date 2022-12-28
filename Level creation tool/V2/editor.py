@@ -11,14 +11,14 @@ class PaletteTile(pygame.sprite.Sprite):
         # Inherit from pygame's sprite class
         pygame.sprite.Sprite.__init__(self)
         # Set the image as the palette number
-        self.image = pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{palette_number}.png"), (64, 64))
+        self.image = pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{palette_number}.png"), (64, 64)).convert_alpha()
         # Set the palette number based on the palette number passed in
         self.palette_number = palette_number
 
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        self.screen = pygame.display.get_surface()
 
     def draw(self, x, y):
         # Draw the palette tile onto the screen 
@@ -79,6 +79,15 @@ class Editor():
         self.button_clicked_time = pygame.time.get_ticks()
 
         # ----------------------------------------------------------------------------------------
+        # Palette tiles panel
+
+        # Define the menu x and y co-ordinates (Easier to modify positioning of the menu) and the font used for the tile_map_selected text
+        self.palette_tiles_panel_x = 25
+        self.palette_tiles_panel_y = 550
+        self.palette_tiles_panel_width = 1415
+        self.tile_map_selected_text_font = pygame.font.SysFont("Bahnschrift", 15)
+
+        # ----------------------------------------------------------------------------------------
         # Editor states
 
         self.show_editor = True
@@ -94,7 +103,7 @@ class Editor():
         number_of_images = len(os.listdir("V2/graphics/palette_tiles"))
 
         # Create a tuple with all of the images inside of the following directory
-        images_tuple = tuple( pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{i}.png"), (32, 32)) for i in range(0, number_of_images) ) 
+        images_tuple = tuple( pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{i}.png"), (32, 32)).convert_alpha() for i in range(0, number_of_images) ) 
 
         # Return the images tuple
         return images_tuple
@@ -174,7 +183,7 @@ class Editor():
 
             # Set/ create a new attribute e.g. self.export__tile_map_button, self.extend_drawing_tiles_button, etc.
             # Note: [:-4] removes the ".png" from the attribute name, all images are scaled to (64 x 64) pixels
-            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1415 + 50, 550 + (i * 80), pyt.scale(pyi.load(f"V2/graphics/buttons/main_editor/{list_of_buttons[i]}"), (64, 64))))
+            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1415 + 50, 550 + (i * 80), pyt.scale(pyi.load(f"V2/graphics/buttons/main_editor/{list_of_buttons[i]}"), (64, 64)).convert()))
 
             # Add the new attribute that was just created to the buttons group
             self.buttons_group.add(self.__getattribute__(list_of_buttons[i][:-4]))
@@ -367,7 +376,7 @@ class Editor():
         pygame.draw.circle(self.screen, "black", (self.mouse_position[0], self.mouse_position[1]), 15, 1) # Outline 2 
 
         # Draw the palette tile selected in the middle of the circle
-        self.screen.blit(pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{self.selected_palette_number}.png"), (20, 20)), (self.mouse_position[0] - (20 / 2), self.mouse_position[1] - (20 / 2) ) )
+        self.screen.blit(pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{self.selected_palette_number}.png"), (20, 20)).convert_alpha(), (self.mouse_position[0] - (20 / 2), self.mouse_position[1] - (20 / 2) ) )
 
     def draw_buttons(self):
 
@@ -418,33 +427,26 @@ class Editor():
             # Increment i index
             i += 1
 
-    def draw_tiles_menu(self):
+    def draw_palette_tiles_panel(self):
 
-        # Define the menu x and y co-ordinates (Easier to modify positioning of the menu)
-        tiles_menu_x = 25
-        tiles_menu_y = 550
-        tiles_menu_width = 1415
-        tiles_menu_height = self.screen.get_height() - tiles_menu_y - 50
+        # Declare the palette tiles panel height again (This is because the user may have exited full screen, so the panel would need to re-adjust
+        self.palette_tiles_panel_height = self.screen.get_height() - self.palette_tiles_panel_y - 50
 
         # Body
-        pygame.draw.rect(self.screen, "gray20", (tiles_menu_x, tiles_menu_y, tiles_menu_width, tiles_menu_height))
+        pygame.draw.rect(self.screen, "gray20", (self.palette_tiles_panel_x, self.palette_tiles_panel_y, self.palette_tiles_panel_width, self.palette_tiles_panel_height))
         # Outline
-        pygame.draw.rect(self.screen, "white", (tiles_menu_x, tiles_menu_y, tiles_menu_width, tiles_menu_height), 5)
+        pygame.draw.rect(self.screen, "white", (self.palette_tiles_panel_x, self.palette_tiles_panel_y, self.palette_tiles_panel_width, self.palette_tiles_panel_height), 5)
 
-        # ----------------------------------------------------------------------------------------
-        # Text displaying the current tile map selected
-        tile_map_selected_text_font = pygame.font.SysFont("Bahnschrift", 15)
-        
         # Draw a text indicating the number of the tile map selected. If no tile map has been loaded, the selected number will be "None"
-        draw_alpha_text(f"Selected tile map:  {self.tile_map_selected_number}", tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 25, self.screen, 110)
+        draw_alpha_text(f"Selected tile map:  {self.tile_map_selected_number}", self.tile_map_selected_text_font, "white", self.palette_tiles_panel_x, self.palette_tiles_panel_y - 25, self.screen, 110)
 
     def run(self):
         
         # Colour the background
         self.screen.fill("gray17")
 
-        # Draw the tiles menu
-        self.draw_tiles_menu()
+        # Draw the palette tiles panel
+        self.draw_palette_tiles_panel()
 
         # Draw the tiles
         self.draw_tiles()   
