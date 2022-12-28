@@ -153,21 +153,12 @@ class Menu:
                 return None
      
     def load_existing_tile_map(self, tile_map):
-
-        # If tile map is None, it means the user pressed the "Return to editor button"
-        if tile_map == None:
-            # Exit the method
-            return None
+        
+        # Create an empty tile list to hold the final tile map
+        tile_list = []
 
         # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method
-        string_tile_list = tile_map[0]
-
-        # Reset self.tile_list so that if the user tried loading multiple tilemaps, only one tile map is displayed at a time
-        self.tile_list = []
-
-        # Save the tile map selected and the number the tile map is as an at tribute
-        # Note: This is so that when the user is given the choice to save this as a new tile map or to overwrite the existing tile map, we know which tile map to replace in the text file if they choose to overwrite the existing tile map
-        self.existing_tile_map_selected = tile_map
+        string_tile_list = tile_map
 
         # ----------------------------------------------------------------------------------------
         # Cleaning the string
@@ -221,16 +212,13 @@ class Menu:
                 row_of_items_list.append(tile)
 
             # Add the row of items list to the tile list
-            self.tile_list.append(row_of_items_list)
+            tile_list.append(row_of_items_list)
         
         # Output a message in the terminal to indicate that the tile map selected has finished loading
         print("Loading complete.")
 
-        # Set the editor's existing tile map selected as the tile map that was just loaded
-        self.editor.existing_tile_map_selected = [self.tile_list, self.existing_tile_map_selected[1]]
-
         # Set the editor's tile map to be the same as the one that was just loaded 
-        self.editor.tile_list = self.tile_list
+        self.editor.tile_map = tile_list
 
     # ----------------------------------------------------------------------------------------
     # Saving methods
@@ -238,13 +226,13 @@ class Menu:
     def save_tile_map(self, automatically_save_variable = None):
         
         # Set the tile list the same as the one in the editor
-        self.tile_list = self.editor.tile_list
+        tile_list = self.editor.tile_map
 
         # ----------------------------------------------------------------------------------------
         # Automatic saving
 
         # If the automatically save variable has been set to True and the user has selected an existing tile map
-        if automatically_save_variable == True and hasattr(self.editor, "existing_tile_map_selected") == True:
+        if automatically_save_variable == True and self.editor.tile_map_selected_number != None:
 
             # Save the progress onto the current tile map selected
             save_as_new_tile_map = False
@@ -253,7 +241,7 @@ class Menu:
             print("Progress has been saved.")
 
         # If the automatically save variable has been set to True but the user hasn't selected an existing tile map
-        elif automatically_save_variable == True and hasattr(self.editor, "existing_tile_map_selected") == False:
+        elif automatically_save_variable == True and self.editor.tile_map_selected_number == None:
 
             # Save the progress as a new tile map
             save_as_new_tile_map = True
@@ -265,7 +253,7 @@ class Menu:
         tile_map_to_be_saved = []
 
         # For each row in the tile list
-        for row_count, row in enumerate(self.tile_list):
+        for row_count, row in enumerate(tile_list):
 
             # Create a new row of items list
             row_of_items_list = []
@@ -274,7 +262,7 @@ class Menu:
             for i in range(0, len(row)):
 
                 # Add the palette number of the tile to the row of items list
-                row_of_items_list.append(self.tile_list[row_count][i][1])
+                row_of_items_list.append(tile_list[row_count][i][1])
 
             # Add the row of items list to the the tile map to be saved
             tile_map_to_be_saved.append(row_of_items_list)
@@ -291,10 +279,10 @@ class Menu:
                     existing_tile_maps_file_content = existing_tile_maps_file.read()
 
                     # Replace the old tile map stored in the text with the tile map to be saved
-                    existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.existing_tile_map_selected[0], str(tile_map_to_be_saved))
+                    existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.existing_tile_maps_dict[self.editor.tile_map_selected_number], str(tile_map_to_be_saved))
 
                     # Set the existing tile map selected as the saved tile map
-                    self.existing_tile_map_selected[0] = str(tile_map_to_be_saved)
+                    self.existing_tile_maps_dict[self.editor.tile_map_selected_number] = str(tile_map_to_be_saved)
 
                 # Open the file to write the contents
                 with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
@@ -335,8 +323,11 @@ class Menu:
             - The tile map passed in should be a list containing the tile map, and the number of the tile map inside the file (which should be the last tile map in the dictionary)
 
             """
-            # Load up the recently created tile map (The last )
-            self.load_existing_tile_map(tile_map = [ self.existing_tile_maps_dict[len(self.existing_tile_maps_dict)], len(self.existing_tile_maps_dict) ] )
+            # Load up the recently created tile map (The last tile map in the text file)
+            self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[len(self.existing_tile_maps_dict)] )
+
+            # Set the number of the tile map selected as the last tile map in the text file
+            self.editor.tile_map_selected_number = len(self.existing_tile_maps_dict)
 
         # Set this attribute back to False so that we stop automatically saving progress for now
         self.editor.automatically_save_progress = False
@@ -418,12 +409,12 @@ class Menu:
 
                             # Output a message in the terminal to indicate that the tile map selected is being loaded
                             print(f"Loading tilemap {int(self.user_input_string)}...")
-                            
-                            # Set the existing tile map selected as a list containing: the tile map and which tile map number it is
-                            self.editor.existing_tile_map_selected = [ self.existing_tile_maps_dict[int(self.user_input_string)], int(self.user_input_string) ]
+
+                            # Set the number of the editor's tile map selected to be the same as in the text file
+                            self.editor.tile_map_selected_number = int(self.user_input_string)
 
                             # Load the existing tile map into the editor
-                            self.load_existing_tile_map(tile_map = self.editor.existing_tile_map_selected)
+                            self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[int(self.user_input_string)])
 
                             # Reset the user input string so that the next time the user loads the menu, the text will be empty
                             self.user_input_string = ""

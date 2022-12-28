@@ -129,8 +129,11 @@ class Editor():
 
     def create_new_tile_map(self):
 
-        # Reset self.tile_list so that if the user tried loading multiple tilemaps, only one tile map is displayed at a time
-        self.tile_list = []
+        # Declare self.tile_map as an empty tile map
+        self.tile_map = []
+        
+        # Declare the tile map as selected as None
+        self.tile_map_selected_number = None
 
         # Calculate the number of lines for x and y
         number_of_lines_x = (screen_width / 2) / 32
@@ -155,7 +158,7 @@ class Editor():
                 row_of_items_list.append(tile)   
             
             # Add the row of items list to the tile list
-            self.tile_list.append(row_of_items_list)
+            self.tile_map.append(row_of_items_list)
 
     def create_buttons(self):
 
@@ -181,7 +184,7 @@ class Editor():
     def extend_drawing_tiles(self):
 
         # For each row in the tile list
-        for row_count, row in enumerate(self.tile_list):
+        for row_count, row in enumerate(self.tile_map):
 
             # Create a new tile with the palette value, 0, and add it to the end of the row
             row.append([pygame.Rect( ( (len(row)  * self.tile_size), (row_count * self.tile_size), self.tile_size, self.tile_size)), 0])
@@ -189,10 +192,10 @@ class Editor():
     def shrink_drawing_tiles(self):
         
         # If the tile list isn't empty
-        if len(self.tile_list) > 0:
+        if len(self.tile_map) > 0:
 
             # For each row in the tile list
-            for row in self.tile_list:
+            for row in self.tile_map:
                 
                 if len(row) > 0:
                     # Remove the last item of the row
@@ -201,7 +204,7 @@ class Editor():
     def reset_tile_map(self):
         
         # For each row in the tile list
-        for row in self.tile_list:
+        for row in self.tile_map:
             # For each tile in each row
             for tile in row:
                 # Set the palette number to 0
@@ -243,7 +246,7 @@ class Editor():
             # Check for every tile inside the tile list
 
             # For each row in the tile list
-            for row in self.tile_list:
+            for row in self.tile_map:
 
                 # For each item in each row
                 for tile in row:
@@ -367,7 +370,7 @@ class Editor():
     def draw_tiles(self):
 
         # For every row in the tile list
-        for row in self.tile_list:
+        for row in self.tile_map:
 
             # For each tile in each row
             for tile in row:
@@ -421,15 +424,10 @@ class Editor():
 
         # ----------------------------------------------------------------------------------------
         # Text displaying the current tile map selected
-        existing_tile_map_selected_text_font = pygame.font.SysFont("Bahnschrift", 15)
+        tile_map_selected_text_font = pygame.font.SysFont("Bahnschrift", 15)
         
-        # If a tile map has been selected
-        if hasattr(self, "existing_tile_map_selected"):
-            # Draw a text indicating the number of the tile map selected
-            draw_alpha_text(f"Selected tile map:  {self.existing_tile_map_selected[1]}", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 25, self.screen, 110)
-        else:
-            # Draw a text indicating the number of the tile map selected
-            draw_alpha_text(f"Selected tile map:  None", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 25, self.screen, 110)
+        # Draw a text indicating the number of the tile map selected. If no tile map has been loaded, the selected number will be "None"
+        draw_alpha_text(f"Selected tile map:  {self.tile_map_selected_number}", tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 25, self.screen, 110)
 
     def run(self):
         
