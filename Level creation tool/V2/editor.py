@@ -1,8 +1,7 @@
-import pygame, os, sys
+import pygame, os
 from settings import *
 from extra_functions import * 
 from button import Button
-from menu import Menu
 from pygame import transform as pyt
 from pygame import image as pyi
 
@@ -26,7 +25,7 @@ class PaletteTile(pygame.sprite.Sprite):
         # Note: These co-ordinates are passed into the method because I want the images to stay at the same position on the screen, but for the rect to move
         self.screen.blit(self.image, (x, y))
 
-class DrawingTiles():
+class Editor():
     def __init__(self):
 
         # Set the display as the current display
@@ -66,8 +65,9 @@ class DrawingTiles():
         # Create a new tile map (A new tile map is created by default upon loading the program)
         self.create_new_tile_map()
 
-        # Attribute used to track whenever changes have been made to the tile map so that progress can be automatically saved
+        # Attributes used to track whenever changes have been made to the tile map so that progress can be automatically saved
         self.changes_made_to_tile_map = False
+        self.automatically_save_progress = False
 
         # ----------------------------------------------------------------------------------------
         # Buttons
@@ -79,10 +79,10 @@ class DrawingTiles():
         self.button_clicked_time = pygame.time.get_ticks()
 
         # ----------------------------------------------------------------------------------------
-        # Menu
+        # Editor states
 
-        # Create the menu, feeding in the tile size and origin point as parameters
-        self.menu = Menu(tile_size = self.tile_size, origin_point = self.origin_point, tile_list = self.tile_list)
+        self.show_editor = True
+        self.show_load_menu = False
 
     # ----------------------------------------------------------------------------------------
     # Initial set-up methods
@@ -289,19 +289,12 @@ class DrawingTiles():
 
                 # If the mouse rect collides with the rect of the load tile map button
                 if self.mouse_rect.colliderect(self.load_tile_map_button.rect):
-
+                    
                     # If the text file that stores all of the existing tile maps created is greater than 0 (It means there is at least one tile map inside)
                     if os.path.getsize("V2/existing_tile_maps.txt") > 0:
-
-                        # Call the loading_existing tile map method with the parameter set as the tile map from the input stage, feeding in the origin point to the menu
-                        return_value = self.menu.load_existing_tile_map(tile_map = self.menu.loading_tile_map_input(origin_point = self.origin_point))
-
-                        # If the user did not press the "Return to editor" button
-                        if return_value != None:
-                            # Set the existing tile map selected as both the tile map and the number of the existing tile map selected
-                            self.existing_tile_map_selected = return_value
-                            # Set the tile list as the returned tile map
-                            self.tile_list = self.existing_tile_map_selected[0]
+                        # Stop showing the editor
+                        self.show_editor = False
+                        self.show_load_menu = True
 
                 # If the mouse rect collides with the rect of the reset tile map button
                 if self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
@@ -317,25 +310,11 @@ class DrawingTiles():
             # If the user has made changes to the tile map
             if self.changes_made_to_tile_map == True:
 
-                # Automatically save progress on the current tile map selected, save the returned value into a variable
-                status = self.menu.automatically_save_progress()
-                
-                # Set the attribute self.changes_made_to_tile_map back to False
+                # Set this attribute to True, so that the menu can automatically save the progress
+                self.automatically_save_progress = True
+
+                # Set this attribute to False, as the progress has been saved
                 self.changes_made_to_tile_map = False
-
-                # If status is "Unsuccessful", it means that the user tried saving changes made onto a blank canvas, so a new tile map was created. Therefore, the tile map should be loaded up.
-                if status == "Unsuccessful":
-
-                    """ 
-                    - It loads up the last tile map inside the dictionary (because this should be the recently created tile map).
-                    - The tile map passed in should be a list containing the tile map, and the number of the tile map inside the file (which should be the last tile map in the dictionary)
-
-                    """
-                    # Load up the recently created tile map
-                    self.menu.load_existing_tile_map(tile_map = [ self.menu.existing_tile_maps_dict[len(self.menu.existing_tile_maps_dict)], len(self.menu.existing_tile_maps_dict) ] )
-
-                    # Set the existing tile map selected to be the recently created tile map and the number of the tile map inside the text file
-                    self.existing_tile_map_selected = [ self.menu.existing_tile_maps_dict[len(self.menu.existing_tile_maps_dict)], len(self.menu.existing_tile_maps_dict) ]
             
         # If the "a" key is being pressed and we aren't trying to go left, beyond the origin point
         if pygame.key.get_pressed()[pygame.K_a] and self.origin_point.x < 0:
@@ -453,6 +432,9 @@ class DrawingTiles():
             draw_alpha_text(f"Selected tile map:  None", existing_tile_map_selected_text_font, "white", tiles_menu_x, tiles_menu_y - 25, self.screen, 110)
 
     def run(self):
+        
+        # Colour the background
+        self.screen.fill("gray17")
 
         # Draw the tiles menu
         self.draw_tiles_menu()

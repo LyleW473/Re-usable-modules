@@ -2,27 +2,41 @@ import pygame, sys, string
 from settings import *
 from button import Button
 from extra_functions import *
+from editor import Editor
 from pygame import image as pyi
 
 class Menu:
 
-    def __init__(self, tile_size, origin_point, tile_list):
+    def __init__(self):
         
         # Set the display as the current display
         self.screen = pygame.display.get_surface()
         self.full_screen = False
 
-        # Set the tile size to be the same as the tile size declared on the DrawingTiles class
-        self.tile_size = tile_size
-
-        # The origin point should be (0, 0) upon instantiation
-        self.origin_point = origin_point
-
-        # The tile list should be an empty tile map upon instantiation
-        self.tile_list = tile_list
-
         # Holds all the existing tile maps
         self.existing_tile_maps_dict = {}
+
+        # -------------------------------------------
+        # Create the editor
+
+        self.editor = Editor()
+
+        # ------------------------------------------- 
+        # Load menu
+        self.origin_point = pygame.math.Vector2(0, 0)
+
+        # Define an empty user input string, font and the user input box
+        self.user_input_string = ""
+        self.user_input_font = pygame.font.SysFont("Bahnschrift", 40)
+        self.user_input_rectangle = pygame.Rect((screen_width / 2) - 110, (screen_height / 2) - 30, 200, 60)
+
+        # Attributes used to detect whenever the user inputted an invalid tile map, e.g. 50 when there are only 20 tile maps.
+        self.invalid_input = False
+        self.invalid_input_time = 0
+
+        # Buttons
+        self.return_to_editor_button = Button((screen_width / 2) - 250, self.user_input_rectangle.y + 250, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
+
 
     # ----------------------------------------------------------------------------------------
     # Helper methods
@@ -56,149 +70,88 @@ class Menu:
                     # Create a new key:value pair in the existing tile maps dictionary, remove the \n at the end of each line
                     self.existing_tile_maps_dict[tile_map_count] = line.strip("\n")
 
+    def update_origin_point(self, origin_point):
+
+        # Set the origin point the same as the origin point in the editor
+        self.origin_point = origin_point
+
     # ----------------------------------------------------------------------------------------
     # Loading methods
 
-    def loading_tile_map_input(self, origin_point): 
+    def loading_tile_map_input(self):
+        # Note: The rest of the code involving interaction with the user input rectangle is within the event loop method
 
-        # Set / update the origin point as an attribute (so that the rectangles are positioned properly in the case that the user moved the camera right)
-        self.origin_point = origin_point
+        # Set / update the button positions (so that the rects are positioned properly in the case that the user moved the camera right)
+        self.return_to_editor_button.rect.x = abs(self.origin_point.x) + (screen_width / 2) - 250
 
         # Set the mouse cursor as visible when asking for user input when loading a tile map
         pygame.mouse.set_visible(True)
 
         # ------------------------------------------------
         # Find out the number of tile maps and save it to the dictionary
-        
         self.find_existing_tile_maps()
 
         # ------------------------------------------------
-        # Handling user input for choosing tile map
+        # Menu display
 
-        # Define an empty user input string, font used, the user input box and a variable which tracks whether the user entered an invalid tile map
-        user_input_string = ""
-        user_input_font = pygame.font.SysFont("Bahnschrift", 40)
-        user_input_rectangle = pygame.Rect((screen_width / 2) - 110, (screen_height / 2) - 30, 200, 60)
-        invalid_input = False
+        # Fill the screen with grey
+        self.screen.fill("gray17") 
 
-        # Create a button to go back to the editor
-        return_to_editor_button = Button((screen_width / 2) - 250 + abs(self.origin_point.x), user_input_rectangle.y + 250, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png"))
+        # Display the instructions onto the screen
+        draw_text("Please enter a tile map", self.user_input_font, "white", self.user_input_rectangle.x - 100, self.user_input_rectangle.y - 60, self.screen)
 
-        # If the full screen attribute is True
-        if self.full_screen == True:
+        # Display the user input string onto the screen
+        draw_text(self.user_input_string, self.user_input_font, "white", self.user_input_rectangle.x + 10, self.user_input_rectangle.y + 10, self.screen)
+
+        # Display the number of tile maps text onto the screen
+        draw_text(f"There are {len(self.existing_tile_maps_dict)} tile maps.", self.user_input_font, "dodgerblue4", self.user_input_rectangle.x - 90, self.user_input_rectangle.y - 160, self.screen)
+
+        # Draw a rectangle for the user input 
+        pygame.draw.rect(self.screen, "black", self.user_input_rectangle, 5)
+
+        # Draw the return to editor button
+        self.return_to_editor_button.draw((screen_width / 2) - 250, self.user_input_rectangle.y + 250)
+
+        # If the user entered an invalid tile map
+        if self.invalid_input == True:
+
+            # Display the invalid text onto the screen for 1 second
+            if pygame.time.get_ticks() - self.invalid_input_time < 1000:
+                draw_text(f"Tilemap {int(self.user_input_string)} does not exist.", self.user_input_font, "red", self.user_input_rectangle.x - 110, self.user_input_rectangle.y + 90, self.screen)
             
-            # Set the screen to full screen
-            self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
-        
-        # Continuously ask for user input 
-        while True: 
-            # ------------------------------------------------
-            # Menu display
+            # Once the second has passed
+            else:
+                # Reset the user input string
+                self.user_input_string = ""
 
-            # Fill the screen with grey
-            self.screen.fill("gray17") 
+                # Reset the invalid_input variable
+                self.invalid_input = False
 
-            # Display the instructions onto the screen
-            draw_text("Please enter a tile map", user_input_font, "white", user_input_rectangle.x - 100, user_input_rectangle.y - 60, self.screen)
+        # ------------------------------------------------
+        # Handle mouse input
 
-            # Display the user input string onto the screen
-            draw_text(user_input_string, user_input_font, "white", user_input_rectangle.x + 10, user_input_rectangle.y + 10, self.screen)
+        # Update the mouse position and mouse rect
+        self.mouse_position_updating()
 
-            # Display the number of tile maps text onto the screen
-            draw_text(f"There are {len(self.existing_tile_maps_dict)} tile maps.", user_input_font, "dodgerblue4", user_input_rectangle.x - 90, user_input_rectangle.y - 160, self.screen)
+        # If the user has pressed the left click
+        if pygame.mouse.get_pressed()[0]:
 
-            # Draw a rectangle for the user input 
-            pygame.draw.rect(self.screen, "black", user_input_rectangle, 5)
+            # If the mouse rect collides with the rect of the save as new tile map button
+            if self.mouse_rect.colliderect(self.return_to_editor_button.rect):
 
-            # Draw the return to editor button
-            return_to_editor_button.draw((screen_width / 2) - 250, user_input_rectangle.y + 250)
+                # Set the mouse cursor invisible again
+                pygame.mouse.set_visible(False)
 
-            # If the user entered an invalid tile map
-            if invalid_input == True:
+                # Show the editor and stop showing the load menu
+                self.editor.show_editor = True
+                self.editor.show_load_menu = False
 
-                # Display the invalid text onto the screen for 1 second
-                if pygame.time.get_ticks() - invalid_input_time < 1000:
-                    draw_text(f"Tilemap {int(user_input_string)} does not exist.", user_input_font, "red", user_input_rectangle.x - 110, user_input_rectangle.y + 90, self.screen)
-                
-                # Once the second has passed
-                else:
-                    # Reset the user input string
-                    user_input_string = ""
+                # Reset the user input string (So that the next time the user enters the load menu, the string will be empty)
+                self.user_input_string = ""
 
-                    # Reset the invalid_input variable
-                    invalid_input = False
-
-            # ------------------------------------------------
-            # Handle mouse input
-
-            # Update the mouse position and mouse rect
-            self.mouse_position_updating()
-
-            # If the user has pressed the left click
-            if pygame.mouse.get_pressed()[0]:
-
-                # If the mouse rect collides with the rect of the save as new tile map button
-                if self.mouse_rect.colliderect(return_to_editor_button.rect):
-
-                    # Set the mouse cursor invisible again
-                    pygame.mouse.set_visible(False)
-
-                    # Return None (this will mean that nothing happens inside the save_tile_map method)
-                    return None
-            
-            # ------------------------------------------------
-            # Event handler
-            for event in pygame.event.get():
-                
-                # If the user pressed a key
-                if event.type == pygame.KEYDOWN:
-
-                    # If the key that was pressed is a number and the tile map number selected is a double digit number
-                    if event.unicode in string.digits and len(user_input_string) < 2:
-                        # Concatenate the digit onto user_input_string
-                        user_input_string += event.unicode
-
-                    # If the user pressed the backspace key
-                    if event.key == pygame.K_BACKSPACE and invalid_input == False:
-                        # Remove the last item of the text and the user hasn't recently entered an invalid tile map
-                        user_input_string = user_input_string[:-1]
-
-                    # If the user pressed the return / enter key and the user input string is not empty and the user hasn't recently entered an invalid tile map
-                    if event.key == pygame.K_RETURN and len(user_input_string) > 0 and invalid_input == False:
-
-                        # If the tile map selected is a key in the existing tile maps dictionary
-                        if int(user_input_string) in self.existing_tile_maps_dict.keys():
-
-                            # Set the mouse cursor invisible again
-                            pygame.mouse.set_visible(False)
-
-                            # Output a message in the terminal to indicate that the tile map selected is being loaded
-                            print(f"Loading tilemap {int(user_input_string)}...")
-                            
-                            # Set the existing tile map selected as the tilemap and the user input string
-                            self.existing_tile_map_selected = [ self.existing_tile_maps_dict[int(user_input_string)], int(user_input_string) ]
-
-                            # Return a list containing: the tile map (this is fed into the load_existing_tile_map method) and which tile map number it is
-                            return [ self.existing_tile_maps_dict[int(user_input_string)], int(user_input_string) ]
-
-
-                        # If the tile map selected isn't a key in the existing tile maps dictionary
-                        else:
-                            # Set the invalid input variable to True
-                            invalid_input = True
-
-                            # Record the time that the user got the 
-                            invalid_input_time = pygame.time.get_ticks()
-
-                # If the exit button was pressed
-                if event.type == pygame.QUIT:
-                    # Close the program
-                    pygame.quit()
-                    sys.exit()
-
-            # Update display
-            pygame.display.update()
-            
+                # Return None (this will mean that nothing happens inside the save_tile_map method)
+                return None
+     
     def load_existing_tile_map(self, tile_map):
 
         # If tile map is None, it means the user pressed the "Return to editor button"
@@ -259,7 +212,7 @@ class Menu:
             for item_count, item in enumerate(row):
                     
                 # Create a rect, spacing them out between each other by the tile size
-                rect = pygame.Rect((item_count * self.tile_size), (row_index * self.tile_size), self.tile_size, self.tile_size)
+                rect = pygame.Rect((item_count * self.editor.tile_size), (row_index * self.editor.tile_size), self.editor.tile_size, self.editor.tile_size)
 
                 # Create a tile containing the rect and palette number of the item, converting the item into an int (as it should be a string at this stage)
                 tile = [rect, int(item)]
@@ -273,26 +226,34 @@ class Menu:
         # Output a message in the terminal to indicate that the tile map selected has finished loading
         print("Loading complete.")
 
-        # Return the tile map and the selected tile map's number to the drawing canvas / main program
-        return [self.tile_list, self.existing_tile_map_selected[1]]
-    
+        # Set the editor's existing tile map selected as the tile map that was just loaded
+        self.editor.existing_tile_map_selected = [self.tile_list, self.existing_tile_map_selected[1]]
+
+        # Set the editor's tile map to be the same as the one that was just loaded 
+        self.editor.tile_list = self.tile_list
+
     # ----------------------------------------------------------------------------------------
     # Saving methods
 
     def save_tile_map(self, automatically_save_variable = None):
+        
+        # Set the tile list the same as the one in the editor
+        self.tile_list = self.editor.tile_list
 
         # ----------------------------------------------------------------------------------------
         # Automatic saving
 
         # If the automatically save variable has been set to True and the user has selected an existing tile map
-        if automatically_save_variable == True and hasattr(self, "existing_tile_map_selected") == True:
+        if automatically_save_variable == True and hasattr(self.editor, "existing_tile_map_selected") == True:
+
             # Save the progress onto the current tile map selected
             save_as_new_tile_map = False
 
+            # Output a message saying that the progress has been saved onto the current selected tile map
             print("Progress has been saved.")
 
         # If the automatically save variable has been set to True but the user hasn't selected an existing tile map
-        elif automatically_save_variable == True and hasattr(self, "existing_tile_map_selected") == False:
+        elif automatically_save_variable == True and hasattr(self.editor, "existing_tile_map_selected") == False:
 
             # Save the progress as a new tile map
             save_as_new_tile_map = True
@@ -367,11 +328,149 @@ class Menu:
         # Automatically save the tile map
         status = self.save_tile_map(automatically_save_variable = True)
 
-        # If the status is "Unsuccessful"
+        # If status is "Unsuccessful", it means that the user tried saving changes made onto a blank canvas, so a new tile map was created. Therefore, the tile map should be loaded up.
         if status == "Unsuccessful":
+            """ 
+            - It loads up the last tile map inside the dictionary (because this should be the recently created tile map).
+            - The tile map passed in should be a list containing the tile map, and the number of the tile map inside the file (which should be the last tile map in the dictionary)
 
-            # Return "Unsuccessful" to the drawing canvas / main program
-            return "Unsuccessful"
+            """
+            # Load up the recently created tile map (The last )
+            self.load_existing_tile_map(tile_map = [ self.existing_tile_maps_dict[len(self.existing_tile_maps_dict)], len(self.existing_tile_maps_dict) ] )
+
+        # Set this attribute back to False so that we stop automatically saving progress for now
+        self.editor.automatically_save_progress = False
+
+    def event_loop(self):
+
+        # Event handler
+        for event in pygame.event.get():
+
+            # If the exit button was pressed
+            if event.type == pygame.QUIT:
+                # Close the program
+                pygame.quit()
+                sys.exit()         
+
+            # If the user pressed a key
+            if event.type == pygame.KEYDOWN:
+
+                # -------------------------------------------------
+                # Universal events
+                
+                # If the user pressed the "Escape" key
+                if event.key == pygame.K_ESCAPE:
+
+                    # Exit the program
+                    pygame.quit()
+                    sys.exit()
+                
+                # If the user pressed the "f" key
+                if event.key == pygame.K_f:
+
+                    # Changing from full screen to windowed
+                    if self.full_screen == True:
+                        
+                        # Set back to windowed mode
+                        self.screen = pygame.display.set_mode((screen_width, screen_height - 50), pygame.RESIZABLE)
+                        self.editor.screen = pygame.display.get_surface()
+
+                        # Set the full screen attributes to False
+                        self.full_screen = False
+                        self.editor.full_screen = False
+
+
+                    # Changing from windowed to full screen
+                    else:
+
+                        # Set back to full screen mode
+                        self.screen = pygame.display.set_mode(flags = pygame.FULLSCREEN)
+                        self.editor.screen = pygame.display.get_surface()
+
+                        # Set the full screen attributes to False
+                        self.full_screen = True
+                        self.editor.full_screen = True
+            
+                # -------------------------------------------------
+                # Load menu events
+
+                # If we are in the load menu
+                if self.editor.show_load_menu == True and self.editor.show_editor == False:
+
+                    # If the key that was pressed is a number and the tile map number selected is a double digit number
+                    if event.unicode in string.digits and len(self.user_input_string) < 2:
+                        # Concatenate the digit onto user_input_string
+                        self.user_input_string += event.unicode
+
+                    # If the user pressed the backspace key
+                    if event.key == pygame.K_BACKSPACE and self.invalid_input == False:
+                        # Remove the last item of the text and the user hasn't recently entered an invalid tile map
+                        self.user_input_string = self.user_input_string[:-1]
+
+                    # If the user pressed the return / enter key and the user input string is not empty and the user hasn't recently entered an invalid tile map
+                    if event.key == pygame.K_RETURN and len(self.user_input_string) > 0 and self.invalid_input == False:
+
+                        # If the tile map selected is a key in the existing tile maps dictionary
+                        if int(self.user_input_string) in self.existing_tile_maps_dict.keys():
+
+                            # Set the mouse cursor invisible again
+                            pygame.mouse.set_visible(False)
+
+                            # Output a message in the terminal to indicate that the tile map selected is being loaded
+                            print(f"Loading tilemap {int(self.user_input_string)}...")
+                            
+                            # Set the existing tile map selected as a list containing: the tile map and which tile map number it is
+                            self.editor.existing_tile_map_selected = [ self.existing_tile_maps_dict[int(self.user_input_string)], int(self.user_input_string) ]
+
+                            # Load the existing tile map into the editor
+                            self.load_existing_tile_map(tile_map = self.editor.existing_tile_map_selected)
+
+                            # Reset the user input string so that the next time the user loads the menu, the text will be empty
+                            self.user_input_string = ""
+
+                            # Show the editor and stop showing the load menu
+                            self.editor.show_editor = True
+                            self.editor.show_load_menu = False
+
+                        # If the tile map selected isn't a key in the existing tile maps dictionary
+                        else:
+                            # Set the invalid input variable to True
+                            self.invalid_input = True
+
+                            # Record the time that the user got the 
+                            self.invalid_input_time = pygame.time.get_ticks()
+
+    def run(self):
+
+        # Run the event loop
+        self.event_loop()
+        
+        # If we need to show the editor
+        if self.editor.show_editor == True:
+
+            # Run the editor
+            self.editor.run()
+
+        # If we don't need to show the editor
+        else:
+
+            # Update the origin point for the menus (so that the button rects are accurate)
+            self.update_origin_point(origin_point = self.editor.origin_point)
+
+            # If we need to show the load menu
+            if self.editor.show_load_menu == True:
+
+                # Ask for input
+                self.loading_tile_map_input()
+
+        # ----------------------------------------------------------------------------------------
+        # Automatically saving
+
+        # If we need to automatically save progress (This only occurs when the user has made changes to the tile map in the editor)
+        if self.editor.automatically_save_progress == True:
+            
+            # Save the progress onto the tile maps text file
+            self.automatically_save_progress()
 
     # def manage_tile_maps(self, origin_point):
 
