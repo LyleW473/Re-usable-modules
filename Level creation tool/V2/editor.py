@@ -245,7 +245,7 @@ class Editor():
         self.mouse_position = pygame.mouse.get_pos()
 
         # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
-        self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 20, 20))
+        self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 1, 1))
 
         # If the left mouse button is pressed
         if pygame.mouse.get_pressed()[0] == 1:
