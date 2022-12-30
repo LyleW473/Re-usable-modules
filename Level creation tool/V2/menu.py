@@ -52,7 +52,8 @@ class Menu:
         # Manage tile maps menu 
 
         # Font
-        self.current_page_font = pygame.font.SysFont("Bahnschrift", 30)
+        self.manage_tm_font_1 = pygame.font.SysFont("Bahnschrift", 30)
+        self.manage_tm_font_2 = pygame.font.SysFont("Bahnschrift", 20)
 
         # Images
         self.select_button_image = pyi.load("V2/graphics/buttons/user_input/select_button.png").convert()
@@ -61,7 +62,9 @@ class Menu:
         self.deselect_button_image = pyi.load("V2/graphics/buttons/user_input/deselect_button.png").convert()
 
         # Selecting / Swapping
-        self.selected_tile_map_for_swapping = None
+        self.first_selected_tile_map_for_swapping = None
+        self.second_selected_tile_map_for_swapping = None
+        self.swap_made_time = 0
 
     # ----------------------------------------------------------------------------------------
     # Helper methods
@@ -365,6 +368,7 @@ class Menu:
 
     # ----------------------------------------------------------------------------------------
     # Managing tile maps menu 
+
     def create_buttons(self):
 
         # Define a variable which will increment, drawing the buttons at the next page if there are 8 on one page already
@@ -386,9 +390,9 @@ class Menu:
 
             # Create a select, swap and delete button for each tile map
             # Store a tile map inside each button ([i + 1] because tile maps are not set as zero indexed) and assign a purpose to the button
-            select_button = Button(abs(self.origin_point.x) + 250, self.menu_origin_point.y + 100 + (i * 100) + next_page_y, self.select_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Select")
-            swap_button = Button(abs(self.origin_point.x) + 250 + 200 + 100, self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.swap_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Swap")
-            delete_button = Button(abs(self.origin_point.x) + 250 + 200 + 200 + 100 + 100, self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.delete_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Delete") 
+            select_button = Button(abs(self.origin_point.x) + 250, 100 + (i * 100) + next_page_y, self.select_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Select")
+            swap_button = Button(abs(self.origin_point.x) + 250 + 200 + 100, 100 + (i * 100) + next_page_y, self.swap_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Swap")
+            delete_button = Button(abs(self.origin_point.x) + 250 + 200 + 200 + 100 + 100, 100 + (i * 100) + next_page_y, self.delete_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Delete") 
 
             # Add the buttons to the group
             self.manage_tile_maps_buttons_group.add(select_button)
@@ -425,38 +429,87 @@ class Menu:
         # Create an attribute which is used to track which page the user is on
         self.current_page = 1
     
-    def draw_menu_text(self):
+    def draw_manage_tile_maps_menu_text(self):
 
         # Draw text displaying what page the user is on
-        draw_text(f"Current page: {self.current_page}", self.current_page_font, "white", 50, self.screen.get_height() - 80, self.screen)
+        draw_text(f"Current page: {self.current_page}", self.manage_tm_font_1, "white", 50, self.screen.get_height() - 80, self.screen)
 
+        # Draw a text displaying which tile map number it is
         # For each tile map
         for tile_map_number, position_list in self.text_positions_dict.items():
             
             # If the y-position of the text is within the boundaries of the current page we are on
             if self.menu_origin_point.y <= position_list[1] < self.menu_origin_point.y + screen_height:
 
-                # Draw a text displaying which tile map number it is
+                
                 # Draw at position y MOD screen_height because these we are drawing them straight onto the screen, not from the origin
-                draw_text(f"Tilemap: {tile_map_number + 1}", self.current_page_font, "white", position_list[0], position_list[1] % screen_height, self.screen)
+                draw_text(f"Tilemap: {tile_map_number + 1}", self.manage_tm_font_1, "white", position_list[0], position_list[1] % screen_height, self.screen)
+
+        # Draw a text to indicate that the swap has been made, if it hasn't been 2 seconds since the swap has been made
+        if pygame.time.get_ticks() - self.swap_made_time < 2000 and self.swap_made_time != 0:
+            draw_text(f"Swap has been made!", self.manage_tm_font_2, "chartreuse2", (screen_width / 2) - 100, 50, self.screen)
 
     def select_tile_map_for_swapping(self, button):
         
         # Set the selected tile map for swapping to be the tile map that was selected (200 x 50)
-        self.selected_tile_map_for_swapping = button.stored_tile_map
+        self.first_selected_tile_map_for_swapping = button.stored_tile_map
 
         # Set the select button's image to be the deselect button image
         button.image = self.deselect_button_image
 
-
     def deselect_tile_map_for_swapping(self, button):
 
         # Set the selected tile map for swapping back to None
-        self.selected_tile_map_for_swapping = None
+        self.first_selected_tile_map_for_swapping = None
 
         # Set the image of the button back to the select button image
         button.image = self.select_button_image
 
+    def swap_tile_maps(self, second_button):
+
+        # Set the second selected tile map for swapping to be the stored tile map of the second button that was clicked
+        self.second_selected_tile_map_for_swapping = second_button.stored_tile_map
+
+        # Open the file to read the contents
+        with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+
+            # Read the contents of the file and save it to a variable
+            existing_tile_maps_file_content = existing_tile_maps_file.read()
+
+            # ----------------------------------------------------------------------------------------
+            # Swapping lines
+
+            # Replace the first selected tile map with a temporary string
+            existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.first_selected_tile_map_for_swapping, "?")
+
+            # Replace the second selected tile map with the first selected tile map
+            existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.second_selected_tile_map_for_swapping, self.first_selected_tile_map_for_swapping)
+            
+            # Replace the temporary string with the second selected tile map
+            existing_tile_maps_file_content = existing_tile_maps_file_content.replace("?", self.second_selected_tile_map_for_swapping)
+
+        # Open the file to write the contents
+        with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
+            # Write the changes made to the existing tile maps file
+            existing_tile_maps_file.write(existing_tile_maps_file_content)
+
+        # Reset the second selected tile map for swapping
+        self.second_selected_tile_map_for_swapping = None
+
+        # Output a message in the terminal
+        print("Swap has been made")
+
+        # ----------------------------------------------------------------------------------------
+        # Manually loading the tile map (in case that the user was on one of the tile maps when the swap was made)
+
+        if self.editor.tile_map_selected_number != None:
+
+            # Update the existing tile maps dictionary with the new version of the tile maps
+            self.find_existing_tile_maps()
+
+            # Load the correct tile map using the selected tile map number
+            self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[self.editor.tile_map_selected_number])
+            
     def manage_tile_maps_menu(self):
 
         # ------------------------------------------------
@@ -466,7 +519,7 @@ class Menu:
         self.draw_buttons()
 
         # Draw all of the text for this menu
-        self.draw_menu_text()
+        self.draw_manage_tile_maps_menu_text()
 
         # ------------------------------------------------
         # Handle mouse input    
@@ -488,9 +541,12 @@ class Menu:
                 # Reset the attribute that states whether the load menu has been updated
                 self.manage_tile_maps_menu_updated = False
 
+                # Reset the first selected tile map for swapping
+                self.first_selected_tile_map_for_swapping = None
+
                 # Reset the menu origin point's y co-ordinate, so that the user starts at the top of the menu again
                 self.menu_origin_point.y = 0
-                
+
                 # Exit the method
                 return None
 
@@ -639,21 +695,40 @@ class Menu:
                                 case "Select":
                                     
                                     # If the user hasn't clicked on a select button before
-                                    if self.selected_tile_map_for_swapping == None:
-                                        print("Selected")
+                                    if self.first_selected_tile_map_for_swapping == None:
                                         # Select the tile map
                                         self.select_tile_map_for_swapping(button)
 
                                     # If the user pressed the deselect button
-                                    elif self.selected_tile_map_for_swapping == button.stored_tile_map:
-                                        print("Deselected")
+                                    elif self.first_selected_tile_map_for_swapping == button.stored_tile_map:
                                         # Deselect the tile map
                                         self.deselect_tile_map_for_swapping(button)
                                 
                                 # Swap button
                                 case "Swap":
-                                    print("Swap")
-                                
+                                    
+                                    # If the selected tile map for swapping is not the same as the tile map stored in the swap button and is not None
+                                    if self.first_selected_tile_map_for_swapping != button.stored_tile_map and self.first_selected_tile_map_for_swapping != None:
+
+                                        # Swap the tile maps
+                                        self.swap_tile_maps(button)
+                                        
+                                        # Record the time that the swap was made
+                                        self.swap_made_time = pygame.time.get_ticks() 
+                                    
+                                    # ---------------------------------------------
+                                    # Resetting the select button image
+
+                                    # Iterate through the buttons group to find the button that 
+                                    for previously_selected_button in self.manage_tile_maps_buttons_group:
+                                        
+                                        # If the button was the button that was previously selected 
+                                        if previously_selected_button.purpose == "Select" and previously_selected_button.stored_tile_map == self.first_selected_tile_map_for_swapping:
+
+                                            # Deselect the tile map
+                                            self.deselect_tile_map_for_swapping(previously_selected_button)    
+
+
                                 # Delete button
                                 case "Delete":
                                     print("Delete")
