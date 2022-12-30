@@ -407,7 +407,7 @@ class Menu:
         # For each button in the manage tile maps buttons group
         for button in self.manage_tile_maps_buttons_group:
             # Draw the button at these positions
-            button.draw(button.rect.x - abs(self.origin_point.x), button.rect.y - abs(self.menu_origin_point.y))
+            button.draw(button.rect.x - abs(self.origin_point.x), button.rect.y)
     
     def calculate_pages(self):
 
@@ -666,6 +666,10 @@ class Menu:
 
                         # Decrement the current page we are on
                         self.current_page -= 1
+                    
+                        # Move all buttons down
+                        for button in self.manage_tile_maps_buttons_group:
+                            button.rect.y += screen_height
 
                     # If the user is pressing the "s" key and the user is not on the last page
                     if event.key == pygame.K_s and self.current_page != self.num_of_pages:
@@ -675,6 +679,10 @@ class Menu:
 
                         # Increment the current page we are on
                         self.current_page += 1
+
+                        # Move all buttons up (so that we can the correct buttons are displayed on screen)
+                        for button in self.manage_tile_maps_buttons_group:
+                            button.rect.y -= screen_height
 
             # If the user has pressed the left mouse button
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -727,7 +735,6 @@ class Menu:
 
                                             # Deselect the tile map
                                             self.deselect_tile_map_for_swapping(previously_selected_button)    
-
 
                                 # Delete button
                                 case "Delete":
