@@ -4,6 +4,7 @@ from button import Button
 from extra_functions import *
 from editor import Editor
 from pygame import image as pyi
+from pygame import transform as pyt
 
 class Menu:
 
@@ -49,14 +50,18 @@ class Menu:
 
         # ------------------------------------------- 
         # Manage tile maps menu 
-        
+
+        # Font
+        self.current_page_font = pygame.font.SysFont("Bahnschrift", 30)
+
         # Images
         self.select_button_image = pyi.load("V2/graphics/buttons/user_input/select_button.png").convert()
         self.swap_button_image =  pyi.load("V2/graphics/buttons/user_input/swap_button.png").convert()
         self.delete_button_image = pyi.load("V2/graphics/buttons/user_input/delete_button.png").convert()
+        self.deselect_button_image = pyi.load("V2/graphics/buttons/user_input/deselect_button.png").convert()
 
-        # Font
-        self.current_page_font = pygame.font.SysFont("Bahnschrift", 30)
+        # Selecting / Swapping
+        self.selected_tile_map_for_swapping = None
 
     # ----------------------------------------------------------------------------------------
     # Helper methods
@@ -115,84 +120,6 @@ class Menu:
 
         # Draw the return to editor button
         self.return_to_editor_button.draw((screen_width / 2) - 250, self.screen.get_height() - self.return_to_editor_button.image.get_height() - 50)
-
-    # ---------------------------------
-    # Specific to manage tile maps menu
-
-    def create_buttons(self):
-
-        # Define a variable which will increment, drawing the buttons at the next page if there are 8 on one page already
-        next_page_y = 0
-
-        # Create a group for the buttons inside the manage tile maps
-        self.manage_tile_maps_buttons_group = pygame.sprite.Group()
-        
-        # Create a dictionary for the "Tilemap: i" text positions
-        self.text_positions_dict = {}
-
-        # Do this for all tile maps inside the existing tile maps dictionary
-        for i in range(0, len(self.existing_tile_maps_dict)):
-
-            # If there are 8 buttons on one page already
-            if i % 8 == 0 and i != 0:   
-                # Start drawing buttons on the next page
-                next_page_y += (screen_height - 800) 
-
-            # Create a select, swap and delete button for each tile map
-            # Store a tile map inside each button ([i + 1] because tile maps are not set as zero indexed) and assign a purpose to the button
-            select_button = Button(abs(self.origin_point.x) + 250, self.menu_origin_point.y + 100 + (i * 100) + next_page_y, self.select_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Select")
-            swap_button = Button(abs(self.origin_point.x) + 250 + 200 + 100, self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.swap_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Swap")
-            delete_button = Button(abs(self.origin_point.x) + 250 + 200 + 200 + 100 + 100, self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.delete_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Delete") 
-
-            # Add the buttons to the group
-            self.manage_tile_maps_buttons_group.add(select_button)
-            self.manage_tile_maps_buttons_group.add(swap_button)
-            self.manage_tile_maps_buttons_group.add(delete_button)
-
-            # Add the co-ordinates where the "Tilemap: i" text will be drawn at 
-            self.text_positions_dict[i] = [50, 110 + (i * 100) + next_page_y]
-
-    def draw_buttons(self):
-
-        # For each button in the manage tile maps buttons group
-        for button in self.manage_tile_maps_buttons_group:
-            # Draw the button at these positions
-            button.draw(button.rect.x - abs(self.origin_point.x), button.rect.y - abs(self.menu_origin_point.y))
-    
-    def calculate_pages(self):
-
-        # Calculate the number of pages there are
-        remainder = len(self.existing_tile_maps_dict) % 8 
-
-        # If the remainder is greater than 0
-        if remainder > 0:
-            # The number of pages would be the number of tile maps divided by 8 and an extra page
-            # If there were 22 tile maps, we would need 3 pages)
-            self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8) + 1
-
-        # If the remainder is 0
-        elif remainder == 0:
-            # The number of pages would be the number of tile maps divided by 8
-            # If there was 16 tile maps, we would need 2 pages
-            self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8)      
-
-        # Create an attribute which is used to track which page the user is on
-        self.current_page = 1
-    
-    def draw_menu_text(self):
-
-        # Draw text displaying what page the user is on
-        draw_text(f"Current page: {self.current_page}", self.current_page_font, "white", 50, self.screen.get_height() - 80, self.screen)
-
-        # For each tile map
-        for tile_map_number, position_list in self.text_positions_dict.items():
-            
-            # If the y-position of the text is within the boundaries of the current page we are on
-            if self.menu_origin_point.y <= position_list[1] < self.menu_origin_point.y + screen_height:
-
-                # Draw a text displaying which tile map number it is
-                # Draw at position y MOD screen_height because these we are drawing them straight onto the screen, not from the origin
-                draw_text(f"Tilemap: {tile_map_number + 1}", self.current_page_font, "white", position_list[0], position_list[1] % screen_height, self.screen)
 
     # ----------------------------------------------------------------------------------------
     # Loading methods
@@ -438,6 +365,97 @@ class Menu:
 
     # ----------------------------------------------------------------------------------------
     # Managing tile maps menu 
+    def create_buttons(self):
+
+        # Define a variable which will increment, drawing the buttons at the next page if there are 8 on one page already
+        next_page_y = 0
+
+        # Create a group for the buttons inside the manage tile maps
+        self.manage_tile_maps_buttons_group = pygame.sprite.Group()
+        
+        # Create a dictionary for the "Tilemap: i" text positions
+        self.text_positions_dict = {}
+
+        # Do this for all tile maps inside the existing tile maps dictionary
+        for i in range(0, len(self.existing_tile_maps_dict)):
+
+            # If there are 8 buttons on one page already
+            if i % 8 == 0 and i != 0:   
+                # Start drawing buttons on the next page
+                next_page_y += (screen_height - 800) 
+
+            # Create a select, swap and delete button for each tile map
+            # Store a tile map inside each button ([i + 1] because tile maps are not set as zero indexed) and assign a purpose to the button
+            select_button = Button(abs(self.origin_point.x) + 250, self.menu_origin_point.y + 100 + (i * 100) + next_page_y, self.select_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Select")
+            swap_button = Button(abs(self.origin_point.x) + 250 + 200 + 100, self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.swap_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Swap")
+            delete_button = Button(abs(self.origin_point.x) + 250 + 200 + 200 + 100 + 100, self.menu_origin_point.y + 100 + (i * 100) + next_page_y , self.delete_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Delete") 
+
+            # Add the buttons to the group
+            self.manage_tile_maps_buttons_group.add(select_button)
+            self.manage_tile_maps_buttons_group.add(swap_button)
+            self.manage_tile_maps_buttons_group.add(delete_button)
+
+            # Add the co-ordinates where the "Tilemap: i" text will be drawn at 
+            self.text_positions_dict[i] = [50, 110 + (i * 100) + next_page_y]
+
+    def draw_buttons(self):
+
+        # For each button in the manage tile maps buttons group
+        for button in self.manage_tile_maps_buttons_group:
+            # Draw the button at these positions
+            button.draw(button.rect.x - abs(self.origin_point.x), button.rect.y - abs(self.menu_origin_point.y))
+    
+    def calculate_pages(self):
+
+        # Calculate the number of pages there are
+        remainder = len(self.existing_tile_maps_dict) % 8 
+
+        # If the remainder is greater than 0
+        if remainder > 0:
+            # The number of pages would be the number of tile maps divided by 8 and an extra page
+            # If there were 22 tile maps, we would need 3 pages)
+            self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8) + 1
+
+        # If the remainder is 0
+        elif remainder == 0:
+            # The number of pages would be the number of tile maps divided by 8
+            # If there was 16 tile maps, we would need 2 pages
+            self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8)      
+
+        # Create an attribute which is used to track which page the user is on
+        self.current_page = 1
+    
+    def draw_menu_text(self):
+
+        # Draw text displaying what page the user is on
+        draw_text(f"Current page: {self.current_page}", self.current_page_font, "white", 50, self.screen.get_height() - 80, self.screen)
+
+        # For each tile map
+        for tile_map_number, position_list in self.text_positions_dict.items():
+            
+            # If the y-position of the text is within the boundaries of the current page we are on
+            if self.menu_origin_point.y <= position_list[1] < self.menu_origin_point.y + screen_height:
+
+                # Draw a text displaying which tile map number it is
+                # Draw at position y MOD screen_height because these we are drawing them straight onto the screen, not from the origin
+                draw_text(f"Tilemap: {tile_map_number + 1}", self.current_page_font, "white", position_list[0], position_list[1] % screen_height, self.screen)
+
+    def select_tile_map_for_swapping(self, button):
+        
+        # Set the selected tile map for swapping to be the tile map that was selected (200 x 50)
+        self.selected_tile_map_for_swapping = button.stored_tile_map
+
+        # Set the select button's image to be the deselect button image
+        button.image = self.deselect_button_image
+
+
+    def deselect_tile_map_for_swapping(self, button):
+
+        # Set the selected tile map for swapping back to None
+        self.selected_tile_map_for_swapping = None
+
+        # Set the image of the button back to the select button image
+        button.image = self.select_button_image
 
     def manage_tile_maps_menu(self):
 
@@ -602,35 +620,43 @@ class Menu:
                         # Increment the current page we are on
                         self.current_page += 1
 
-            # If the user has pressed 
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user has pressed the left mouse button
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 
                 # If we are in the manage tile maps menu          
                 if self.editor.show_manage_tile_maps_menu == True and self.editor.show_editor == False:
-                    
-                    # If the left mouse button was clicked
-                    if event.button == 1:
 
-                        # For all buttons in the manage tile maps menu
-                        for button in self.manage_tile_maps_buttons_group:
+                    # For all buttons in the manage tile maps menu
+                    for button in self.manage_tile_maps_buttons_group:
 
-                            # If it collides with the rectangle of the button
-                            if self.mouse_rect.colliderect(button.rect):
+                        # If it collides with the rectangle of the button
+                        if self.mouse_rect.colliderect(button.rect):
+                            
+                            # Check what the button's purpose is
+                            match button.purpose:
                                 
-                                # Check what the button's purpose is
-                                match button.purpose:
+                                # Select button
+                                case "Select":
                                     
-                                    # Select button
-                                    case "Select":
-                                        print("Select")
-                                    
-                                    # Swap button
-                                    case "Swap":
-                                        print("Swap")
-                                    
-                                    # Delete button
-                                    case "Delete":
-                                        print("Delete")
+                                    # If the user hasn't clicked on a select button before
+                                    if self.selected_tile_map_for_swapping == None:
+                                        print("Selected")
+                                        # Select the tile map
+                                        self.select_tile_map_for_swapping(button)
+
+                                    # If the user pressed the deselect button
+                                    elif self.selected_tile_map_for_swapping == button.stored_tile_map:
+                                        print("Deselected")
+                                        # Deselect the tile map
+                                        self.deselect_tile_map_for_swapping(button)
+                                
+                                # Swap button
+                                case "Swap":
+                                    print("Swap")
+                                
+                                # Delete button
+                                case "Delete":
+                                    print("Delete")
 
     def run(self):
 
