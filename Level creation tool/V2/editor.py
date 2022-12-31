@@ -176,14 +176,14 @@ class Editor():
         self.buttons_group = pygame.sprite.Group()
 
         # Create a list of buttons with all the button images in the buttons directory for the main display
-        list_of_buttons = os.listdir("V2/graphics/buttons/main_editor")
+        list_of_buttons = os.listdir("V2/graphics/buttons/editor")
 
         # For all the buttons in the list
         for i in range(0, len(list_of_buttons)):
 
             # Set/ create a new attribute e.g. self.export__tile_map_button, self.extend_drawing_tiles_button, etc.
-            # Note: [:-4] removes the ".png" from the attribute name, all images are scaled to (64 x 64) pixels
-            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1415 + 50, 550 + (i * 80), pyt.scale(pyi.load(f"V2/graphics/buttons/main_editor/{list_of_buttons[i]}"), (64, 64)).convert()))
+            # Note: [:-4] removes the ".png" from the attribute name
+            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1415 + 50, 550 + (i * 90), pyt.smoothscale(pyi.load(f"V2/graphics/buttons/editor/{list_of_buttons[i]}"), (75, 75)).convert()))
 
             # Add the new attribute that was just created to the buttons group
             self.buttons_group.add(self.__getattribute__(list_of_buttons[i][:-4]))
@@ -383,7 +383,7 @@ class Editor():
         # For every button in the buttons group
         for i, button in enumerate(self.buttons_group):
             # Draw the button onto the screen
-            button.draw(1415 + 50, 550 + (i * 80))
+            button.draw(1415 + 50, 550 + (i * 90))
 
     def draw_tiles(self):
 

@@ -46,7 +46,7 @@ class Menu:
         self.invalid_input_time = 0
 
         # Buttons
-        self.return_to_editor_button = Button((screen_width / 2) - 250, self.menu_origin_point.y + self.user_input_rectangle.y + 400, pyi.load("V2/graphics/buttons/user_input/return_to_editor_button.png").convert())
+        self.return_to_editor_button = Button((screen_width / 2) - 250, self.menu_origin_point.y + self.user_input_rectangle.y + 400, pyi.load("V2/graphics/buttons/menu/return_to_editor_button.png").convert())
 
         # ------------------------------------------- 
         # Manage tile maps menu 
@@ -56,11 +56,11 @@ class Menu:
         self.manage_tm_font_2 = pygame.font.SysFont("Bahnschrift", 20)
 
         # Images
-        self.select_button_image = pyi.load("V2/graphics/buttons/user_input/select_button.png").convert()
-        self.swap_button_image =  pyi.load("V2/graphics/buttons/user_input/swap_button.png").convert()
-        self.delete_button_image = pyi.load("V2/graphics/buttons/user_input/delete_button.png").convert()
-        self.deselect_button_image = pyi.load("V2/graphics/buttons/user_input/deselect_button.png").convert()
-        self.undo_button_image = pyi.load("V2/graphics/buttons/user_input/undo_button.png").convert()
+        self.select_button_image = pyi.load("V2/graphics/buttons/menu/select_button.png").convert()
+        self.swap_button_image =  pyi.load("V2/graphics/buttons/menu/swap_button.png").convert()
+        self.delete_button_image = pyi.load("V2/graphics/buttons/menu/delete_button.png").convert()
+        self.deselect_button_image = pyi.load("V2/graphics/buttons/menu/deselect_button.png").convert()
+        self.undo_button_image = pyi.load("V2/graphics/buttons/menu/undo_button.png").convert()
 
         # Selecting / Swapping
         self.first_selected_tile_map_for_swapping = None
