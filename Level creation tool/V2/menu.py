@@ -50,7 +50,7 @@ class Menu:
 
         # ------------------------------------------- 
         # Manage tile maps menu 
-
+        
         # Font
         self.manage_tm_font_1 = pygame.font.SysFont("Bahnschrift", 30)
         self.manage_tm_font_2 = pygame.font.SysFont("Bahnschrift", 20)
@@ -65,6 +65,9 @@ class Menu:
         self.first_selected_tile_map_for_swapping = None
         self.second_selected_tile_map_for_swapping = None
         self.swap_made_time = 0
+        
+        # Deleting 
+        self.deletion_complete_time = 0
 
     # ----------------------------------------------------------------------------------------
     # Helper methods
@@ -80,6 +83,9 @@ class Menu:
 
     def find_existing_tile_maps(self):
         # Finds out the number of tile maps in the text file and updates the existing tile maps dictionary with the contents
+
+        # Reset the existing tile maps dictionary 
+        self.existing_tile_maps_dict = {}
 
         tile_map_count = 0 # Holds the number of tile maps saved in the file
 
@@ -191,7 +197,7 @@ class Menu:
         # Create an empty tile list to hold the final tile map
         tile_list = []
 
-        # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method
+        # Set the string_tile_list as the tile map selected by the user from the loading_tile_map_input method (or the tile map from the dictionary)
         string_tile_list = tile_map
 
         # ----------------------------------------------------------------------------------------
@@ -367,7 +373,7 @@ class Menu:
         self.editor.automatically_save_progress = False
 
     # ----------------------------------------------------------------------------------------
-    # Managing tile maps menu 
+    # Managing tile maps menu methods
 
     def create_buttons(self):
 
@@ -390,9 +396,9 @@ class Menu:
 
             # Create a select, swap and delete button for each tile map
             # Store a tile map inside each button ([i + 1] because tile maps are not set as zero indexed) and assign a purpose to the button
-            select_button = Button(abs(self.origin_point.x) + 250, 100 + (i * 100) + next_page_y, self.select_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Select")
-            swap_button = Button(abs(self.origin_point.x) + 250 + 200 + 100, 100 + (i * 100) + next_page_y, self.swap_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Swap")
-            delete_button = Button(abs(self.origin_point.x) + 250 + 200 + 200 + 100 + 100, 100 + (i * 100) + next_page_y, self.delete_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Delete") 
+            select_button = Button(abs(self.origin_point.x) + 250, 100 + (i * 100) + next_page_y, self.select_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Select", tile_map_number = i + 1)
+            swap_button = Button(abs(self.origin_point.x) + 250 + 200 + 100, 100 + (i * 100) + next_page_y, self.swap_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Swap", tile_map_number = i + 1)
+            delete_button = Button(abs(self.origin_point.x) + 250 + 200 + 200 + 100 + 100, 100 + (i * 100) + next_page_y, self.delete_button_image, tile_map = self.existing_tile_maps_dict[i + 1], purpose = "Delete", tile_map_number = i + 1)
 
             # Add the buttons to the group
             self.manage_tile_maps_buttons_group.add(select_button)
@@ -422,32 +428,43 @@ class Menu:
 
         # If the remainder is 0
         elif remainder == 0:
-            # The number of pages would be the number of tile maps divided by 8
-            # If there was 16 tile maps, we would need 2 pages
-            self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8)      
 
-        # Create an attribute which is used to track which page the user is on
-        self.current_page = 1
-    
+            # If there are no tile maps, there should be 1 page
+            if len(self.existing_tile_maps_dict) == 0:
+                self.num_of_pages = 1
+
+            # If there are tile maps
+            else:
+                # The number of pages would be the number of tile maps divided by 8
+                # If there was 16 tile maps, we would need 2 pages
+                self.num_of_pages = int(len(self.existing_tile_maps_dict) / 8)      
+
     def draw_manage_tile_maps_menu_text(self):
 
         # Draw text displaying what page the user is on
         draw_text(f"Current page: {self.current_page}", self.manage_tm_font_1, "white", 50, self.screen.get_height() - 80, self.screen)
 
+        # ----------------------------------------------------------------------------------------
         # Draw a text displaying which tile map number it is
+
         # For each tile map
         for tile_map_number, position_list in self.text_positions_dict.items():
             
             # If the y-position of the text is within the boundaries of the current page we are on
             if self.menu_origin_point.y <= position_list[1] < self.menu_origin_point.y + screen_height:
 
-                
                 # Draw at position y MOD screen_height because these we are drawing them straight onto the screen, not from the origin
                 draw_text(f"Tilemap: {tile_map_number + 1}", self.manage_tm_font_1, "white", position_list[0], position_list[1] % screen_height, self.screen)
 
+        # ----------------------------------------------------------------------------------------
         # Draw a text to indicate that the swap has been made, if it hasn't been 2 seconds since the swap has been made
         if pygame.time.get_ticks() - self.swap_made_time < 2000 and self.swap_made_time != 0:
             draw_text(f"Swap has been made!", self.manage_tm_font_2, "chartreuse2", (screen_width / 2) - 100, 50, self.screen)
+
+        # ----------------------------------------------------------------------------------------
+        # Draw a text to indicate that the deletion was successful, if it hasn't been 2 seconds since the tile map was deleted
+        if pygame.time.get_ticks() - self.deletion_complete_time < 2000 and self.deletion_complete_time != 0:
+            draw_text(f"Tilemap successfully deleted!", self.manage_tm_font_2, "chartreuse2", (screen_width / 2) - 125, 50, self.screen)
 
     def select_tile_map_for_swapping(self, button):
         
@@ -509,7 +526,91 @@ class Menu:
 
             # Load the correct tile map using the selected tile map number
             self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[self.editor.tile_map_selected_number])
+
+    def delete_tile_map(self, tile_map_number):
+
+        # ----------------------------------------------------------------------------------------
+        # Deleting the tile map
+
+        # Declare an empty string which will hold all the tile maps except for the one selected for deletion
+        existing_tile_maps_file_content = ""
+
+        # Open the file to read the contents
+        with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+
+            # Iterate through each line inside the text file
+            for line_number, text_tile_map in enumerate(existing_tile_maps_file.readlines()):
+
+                # If the line number we are on is not the same as the tile map number (Line number is compared because there may be tile maps with the same layout so we should not compare tile maps)
+                # Note: line_number + 1, because the tile maps are stored non-zero indexed (first tile map starts at index 1)
+                if line_number + 1 != tile_map_number:
+                    # Add the tile map to the content we will update the text file with
+                    existing_tile_maps_file_content += text_tile_map
+
+        # Open the file to write the contents
+        with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
+            # Write the changes made to the existing tile maps file
+            existing_tile_maps_file.write(existing_tile_maps_file_content)  
+
+        # Set the time that the tile map was deleted to be now
+        self.deletion_complete_time = pygame.time.get_ticks()
+
+        # Output a message in the terminal stating that the tile map has been deleted
+        print(f"Deleted tile map {tile_map_number}!")
+
+        # ----------------------------------------------------------------------------------------
+        # Additional checks / features
+
+        # Update the existing tile maps dictionary with the new version of the tile maps text file
+        self.find_existing_tile_maps()
+
+        # Create the buttons again, (this is because if e.g. the 2nd tile map was deleted, the 3rd tile map before deletion would now be the 2nd tile map (every tile map moves down)
+        self.create_buttons()
+
+        # Calculate the number of pages again and go back to the previous page if we are over the maximum number of pages
+        self.calculate_pages()
+
+        # If the user is now on a page with no buttons on it
+        if self.current_page > self.num_of_pages:
+            # Go back to the previous page
+            self.current_page -= 1
+            self.menu_origin_point.y -= screen_height
+
+        # Calculate the amount we need to subtract from the button rectangle so that all button rects are aligned according to what page the user is currently on
+        realignment_y = (self.current_page - 1) * screen_height
+        for button in self.manage_tile_maps_buttons_group:
+            button.rect.y -= realignment_y
+
+        # ----------------------------------------------------------------------------------------
+        # - Manually loading the tile map in the situation the user was on the tile map that they selected for deletion 
+        # - Manually loading the same tile map in the situation that the user was on a tile map greater than the tile map selected for deletion
+        # - Creating a new blank tile map in the situation that there are no more tile maps
+
+        # User was on the tile map selected for deletion or if the user was on a tile map greater than the tile map selected for deletion (E.g. On tile map 34, when tile map 1 was deleted)
+        if self.editor.tile_map_selected_number != None and self.editor.tile_map_selected_number >= tile_map_number:
             
+            # If the user wasn't on the very first tile map 
+            if self.editor.tile_map_selected_number > 1:
+
+                # Go to the tile map before the one that was deleted (e.g. if 24 was deleted, load in tile map 23)
+                # If the user was on tile map 23 when tile map 1 was deleted, all tile maps shift down by 1, so tile map 23 will now be tile map 22
+                self.editor.tile_map_selected_number -= 1
+                
+                # Output a message in the terminal saying that we are loading the tile map
+                print(f"Loading tilemap {self.editor.tile_map_selected_number}...")
+
+                # Load the correct tile map using the selected tile map number
+                self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[self.editor.tile_map_selected_number])
+
+            # If the user was on the first tile map
+            elif self.editor.tile_map_selected_number == 1:
+
+                # Create a new tile map (The selected tile map number is automatically reset back to "None")
+                self.editor.create_new_blank_tile_map()
+                
+                # Output a message in the terminal saying that we created a blank canvas
+                print("Created a blank tile map! There are no more tile maps to delete!")
+
     def manage_tile_maps_menu(self):
 
         # ------------------------------------------------
@@ -549,6 +650,9 @@ class Menu:
 
                 # Exit the method
                 return None
+    
+    # ----------------------------------------------------------------------------------------
+    # Main program methods
 
     def event_loop(self):
 
@@ -695,7 +799,7 @@ class Menu:
 
                         # If it collides with the rectangle of the button
                         if self.mouse_rect.colliderect(button.rect):
-                            
+
                             # Check what the button's purpose is
                             match button.purpose:
                                 
@@ -738,7 +842,9 @@ class Menu:
 
                                 # Delete button
                                 case "Delete":
-                                    print("Delete")
+
+                                    # Delete the tile map from the text file based on the line number in the text file
+                                    self.delete_tile_map(tile_map_number = button.stored_tile_map_number)
 
     def run(self):
 
@@ -794,6 +900,9 @@ class Menu:
 
                     # Calculate the number of pages there are according to how many tile maps there are
                     self.calculate_pages()
+
+                    # Create an attribute which is used to track which page the user is on
+                    self.current_page = 1
 
                     # The manage tile maps menu is now updated
                     self.manage_tile_maps_menu_updated = True

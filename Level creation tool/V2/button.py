@@ -2,7 +2,7 @@ import pygame
 from settings import * 
 
 class Button(pygame.sprite.Sprite):
-    def __init__(self, x, y, image, tile_map = None, purpose = None):
+    def __init__(self, x, y, image, tile_map = None, tile_map_number = None, purpose = None):
         # Inherit from pygame's sprite class
         pygame.sprite.Sprite.__init__(self)
         self.image = image 
@@ -13,6 +13,9 @@ class Button(pygame.sprite.Sprite):
 
         # Store the tile map that is passed to the object
         self.stored_tile_map = tile_map
+
+        # Store the tile map number
+        self.stored_tile_map_number = tile_map_number
 
         # Select the purpose of the button
         self.purpose = purpose

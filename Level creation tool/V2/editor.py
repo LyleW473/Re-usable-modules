@@ -62,8 +62,8 @@ class Editor():
         # Create a tuple with all the images needed for the tiles
         self.image = self.load_tile_images()
 
-        # Create a new tile map (A new tile map is created by default upon loading the program)
-        self.create_new_tile_map()
+        # Create a new blank tile map (A blank canvas is created by default upon loading the program)
+        self.create_new_blank_tile_map()
 
         # Attributes used to track whenever changes have been made to the tile map so that progress can be automatically saved
         self.changes_made_to_tile_map = False
@@ -137,7 +137,7 @@ class Editor():
             i += 1
             palette_tile_count += 1
 
-    def create_new_tile_map(self):
+    def create_new_blank_tile_map(self):
 
         # Declare self.tile_map as an empty tile map
         self.tile_map = []
