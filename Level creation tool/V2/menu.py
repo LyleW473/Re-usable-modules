@@ -843,6 +843,7 @@ class Menu:
             # If the user has pressed the left mouse button
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
 
+                # ----------------------------------------------------------------------------------------
                 # If we are in the manage tile maps menu          
                 if self.editor.show_manage_tile_maps_menu == True and self.editor.show_editor == False:
 

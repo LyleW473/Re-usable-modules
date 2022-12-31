@@ -178,12 +178,18 @@ class Editor():
         # Create a list of buttons with all the button images in the buttons directory for the main display
         list_of_buttons = os.listdir("V2/graphics/buttons/editor")
 
+        next_column = 0
         # For all the buttons in the list
         for i in range(0, len(list_of_buttons)):
 
+            # If there are 5 buttons in one column
+            if i % 5 == 0 and i != 0:
+                # Start drawing buttons at the next column
+                next_column = 100
+
             # Set/ create a new attribute e.g. self.export__tile_map_button, self.extend_drawing_tiles_button, etc.
             # Note: [:-4] removes the ".png" from the attribute name
-            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1415 + 50, 550 + (i * 90), pyt.smoothscale(pyi.load(f"V2/graphics/buttons/editor/{list_of_buttons[i]}"), (75, 75)).convert()))
+            setattr(self, f"{list_of_buttons[i][:-4]}", Button(1465 + next_column, 550 + ((i % 5) * 90), pyt.smoothscale(pyi.load(f"V2/graphics/buttons/editor/{list_of_buttons[i]}"), (75, 75)).convert()))
 
             # Add the new attribute that was just created to the buttons group
             self.buttons_group.add(self.__getattribute__(list_of_buttons[i][:-4]))
@@ -191,15 +197,15 @@ class Editor():
     # ----------------------------------------------------------------------------------------
     # Interaction methods
 
-    def extend_drawing_tiles(self):
+    def extend_drawing_tiles_x(self):
 
         # For each row in the tile list
         for row_count, row in enumerate(self.tile_map):
 
             # Create a new tile with the palette value, 0, and add it to the end of the row
-            row.append([pygame.Rect( ( (len(row)  * self.tile_size), (row_count * self.tile_size), self.tile_size, self.tile_size)), 0])
+            row.append([pygame.Rect((len(row)  * self.tile_size), (row_count * self.tile_size), self.tile_size, self.tile_size), 0])
    
-    def shrink_drawing_tiles(self):
+    def shrink_drawing_tiles_x(self):
         
         # If the tile list isn't empty
         if len(self.tile_map) > 0:
@@ -211,6 +217,26 @@ class Editor():
                     # Remove the last item of the row
                     row.pop()
 
+    def extend_drawing_tiles_y(self):
+        
+        # Create an empty row (list) which will be added onto the tile map
+        row_to_be_added = []
+        
+        # For the amount of items in one row 
+        for i in range(0, len(self.tile_map[0])):
+
+            # Add a new tile to the row, with their own x position (according to the index) all with the same y position
+            # Note: The y position should be the number of rows already in the tile map times the tile size
+            row_to_be_added.append([pygame.Rect((i * self.tile_size), len(self.tile_map) * self.tile_size, self.tile_size, self.tile_size), 0])
+
+        # Add the row onto the tile map 
+        self.tile_map.append(row_to_be_added)
+
+    def shrink_drawing_tiles_y(self):
+
+        # Remove the last row in the tile map
+        self.tile_map = self.tile_map[:-1]
+            
     def reset_tile_map(self):
         
         # For each row in the tile list
@@ -243,7 +269,6 @@ class Editor():
 
         # Retrieve the mouse position
         self.mouse_position = pygame.mouse.get_pos()
-
         # Define the mouse rect and draw it onto the screen (For collisions with drawing tiles)
         self.mouse_rect = pygame.Rect(((-self.origin_point.x) + self.mouse_position[0], self.mouse_position[1], 1, 1))
 
@@ -261,9 +286,9 @@ class Editor():
                 # For each item in each row
                 for tile in row:
 
-                    # If the mouse rect collides with the tile rect (tile[0] = tile rect, tile[1] = palette number )
-                    if self.mouse_rect.colliderect(tile[0]):
-                        print(f"Clicked on {tile[0]}")
+                    # If the mouse rect collides with the tile (tile[0] = tile rect, tile[1] = palette number, tile[0][0] = rect.x, tile[0][1] = rect.y)
+                    # Note: I do not use collide rect because then I would need to move all the y positions of the tile rects, which could affect the final tile map
+                    if (tile[0][1] - abs(self.origin_point.y) <= self.mouse_rect.y <= tile[0][1] + self.tile_size - abs(self.origin_point.y)) and (tile[0][0] <= self.mouse_rect.x <= tile[0][0] + self.tile_size):
 
                         # Set the drawing tile's palette number to be the current selected palette tile number
                         tile[1] = self.selected_palette_number
@@ -288,17 +313,27 @@ class Editor():
             # Collision with buttons
 
             # If enough time has passed since the last time a button has been clicked
-            if pygame.time.get_ticks() - self.button_clicked_time > 500:
+            if pygame.time.get_ticks() - self.button_clicked_time > 250:
 
-                # If the mouse rect collides with the rect of the extend drawing tiles button
-                if self.mouse_rect.colliderect(self.drawing_tiles_extend_button.rect):
+                # If the mouse rect collides with the rect of the extend x drawing tiles button
+                if self.mouse_rect.colliderect(self.drawing_tiles_extend_x_button.rect):
                     # Extend the drawing tiles by one column
-                    self.extend_drawing_tiles()
+                    self.extend_drawing_tiles_x()
                 
-                # If the mouse rect collides with the rect of the shrink drawing tiles button
-                if self.mouse_rect.colliderect(self.drawing_tiles_shrink_button.rect):
+                # If the mouse rect collides with the rect of the shrink x drawing tiles button
+                if self.mouse_rect.colliderect(self.drawing_tiles_shrink_x_button.rect):
                     # Shrink the drawing tiles by one column
-                    self.shrink_drawing_tiles()
+                    self.shrink_drawing_tiles_x()
+
+                # If the mouse rect collides with the rect of the extend y drawing tiles button
+                if self.mouse_rect.colliderect(self.drawing_tiles_extend_y_button.rect):
+                    # Extend the drawing tiles by one row
+                    self.extend_drawing_tiles_y()
+
+                # If the mouse rect collides with the rect of the shrink y drawing tiles button
+                if self.mouse_rect.colliderect(self.drawing_tiles_shrink_y_button.rect):
+                    # Shrink the drawing tiles by one row
+                    self.shrink_drawing_tiles_y()
 
                 # If the mouse rect collides with the rect of the load tile map button
                 if self.mouse_rect.colliderect(self.load_tile_map_button.rect):
@@ -336,10 +371,12 @@ class Editor():
 
                 # Set this attribute to False, as the progress has been saved
                 self.changes_made_to_tile_map = False
-            
-        # If the "a" key is being pressed and we aren't trying to go left, beyond the origin point
-        if pygame.key.get_pressed()[pygame.K_a] and self.origin_point.x < 0:
 
+        # ----------------------------------------------------------------------------------------
+        # Key presses
+
+        # If the "a" key is being pressed and we aren't trying to go left when we are at (0, ?)
+        if pygame.key.get_pressed()[pygame.K_a] and self.origin_point.x != 0:
             # Move the origin point right
             self.origin_point.x += self.tile_size
 
@@ -366,8 +403,18 @@ class Editor():
 
             # For every button in the buttons group
             for button in self.buttons_group:
-                # Move the button rect right
+                # Move the button rect rightww
                 button.rect.x += self.tile_size
+
+        # If the "w" key is being pressed and we aren't trying to go up when we are at (?, 0)
+        if pygame.key.get_pressed()[pygame.K_w] and self.origin_point.y != 0:
+            # Move the origin point down
+            self.origin_point.y += self.tile_size
+
+        # If the "s" key is being pressed 
+        elif pygame.key.get_pressed()[pygame.K_s]:
+            # Move the origin point up
+            self.origin_point.y -= self.tile_size
 
     def set_new_cursor(self):
         # Draw a circle where the mouse cursor is
@@ -379,11 +426,18 @@ class Editor():
         self.screen.blit(pyt.scale(pyi.load(f"V2/graphics/palette_tiles/{self.selected_palette_number}.png"), (20, 20)).convert_alpha(), (self.mouse_position[0] - (20 / 2), self.mouse_position[1] - (20 / 2) ) )
 
     def draw_buttons(self):
-
+        
+        next_column = 0
         # For every button in the buttons group
         for i, button in enumerate(self.buttons_group):
+            
+            # If there are 5 buttons in one column
+            if i % 5 == 0  and i != 0:
+                # Start drawing buttons at the next column
+                next_column = 100
+
             # Draw the button onto the screen
-            button.draw(1415 + 50, 550 + (i * 90))
+            button.draw(1465 + next_column, 550 + ((i % 5) * 90))
 
     def draw_tiles(self):
 
@@ -392,9 +446,13 @@ class Editor():
 
             # For each tile in each row
             for tile in row:
+                
+                # If the y position of the tile minus the origin point's y position is less than the screen height, draw it onto the screen
+                # Note: This only draws tiles up to halfway of the screen
+                if tile[0][1] - abs(self.origin_point.y) < (screen_height / 2) - self.tile_size:
 
-                # Draw the appropriate image based on the palette number, at the correct x and y positions from the origin point
-                self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], self.origin_point.y + tile[0][1]))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
+                    # Draw the appropriate image based on the palette number, at the correct x and y positions from the origin point
+                    self.screen.blit(self.image[tile[1]], (self.origin_point.x + tile[0][0], tile[0][1] - abs(self.origin_point.y)))  # tile[1] =  palette number, tile[0][0] = The x co-ordinate of the rect, tile[0][1] = the y co-ordinate of the rect
 
     def draw_palette_tiles(self):
 
