@@ -26,6 +26,28 @@ class Menu:
         # Create the editor
 
         self.editor = Editor()
+        
+        # Loading the tile map the user last had open:
+
+        # If the editor has this attribute, it means that we need to load the tile map that the user last had open
+        if hasattr(self.editor, "load_last_tile_map_before_exit"):
+
+            # Open the text file that contains the line number for the tile map that the user last had open 
+            with open("V2/last_tile_map_before_exit.txt") as last_tile_map_before_exit_file:
+                
+                # Read the file and save it into a variable
+                tile_map_number = last_tile_map_before_exit_file.read()
+
+                # Update the tile maps dictionary (this is because the dictionary would be empty at this point)
+                self.find_existing_tile_maps()
+
+                print("History restored!")
+
+                # Load the last time map the user last had open
+                self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[int(tile_map_number)])
+
+                # Set the tile map selected to be the number inside the text file
+                self.editor.tile_map_selected_number = tile_map_number
 
         # ------------------------------------------- 
         # MENUS
@@ -377,6 +399,12 @@ class Menu:
 
         # Set this attribute back to False so that we stop automatically saving progress for now
         self.editor.automatically_save_progress = False
+    
+    def save_last_tile_map_before_exit(self):
+
+        with open("V2/last_tile_map_before_exit.txt", "w") as last_tile_map_before_exit_file:
+            # The last tile map that was open before exiting the program would be the tile map that the user had open
+            last_tile_map_before_exit_file.write(str(self.editor.tile_map_selected_number))
 
     # ----------------------------------------------------------------------------------------
     # Managing tile maps menu methods
@@ -665,7 +693,7 @@ class Menu:
 
         # Draw all of the text for this menu
         self.draw_manage_tile_maps_menu_text()
-        pygame.draw.line(self.screen, "white", (screen_width / 2, 0), (screen_width / 2, screen_height), 1)
+
     def undo_action(self):
         # For deletion and swapping, reverse the changes by going back to the previous version of the text file
 
@@ -711,7 +739,13 @@ class Menu:
 
             # If the exit button was pressed
             if event.type == pygame.QUIT:
-                # Close the program
+
+                # If a tile map has been selected
+                if self.editor.tile_map_selected_number != None:
+                    # Save the last tile map the user had open before exiting the program, so that it can be loaded up when they enter the program again
+                    self.save_last_tile_map_before_exit()
+
+                # Exit the program
                 pygame.quit()
                 sys.exit()         
 
@@ -723,6 +757,11 @@ class Menu:
                 
                 # If the user pressed the "Escape" key
                 if event.key == pygame.K_ESCAPE:
+                        
+                    # If a tile map has been selected
+                    if self.editor.tile_map_selected_number != None:
+                        # Save the last tile map the user had open before exiting the program, so that it can be loaded up when they enter the program again
+                        self.save_last_tile_map_before_exit()
 
                     # Exit the program
                     pygame.quit()
