@@ -60,6 +60,7 @@ class Menu:
         self.swap_button_image =  pyi.load("V2/graphics/buttons/user_input/swap_button.png").convert()
         self.delete_button_image = pyi.load("V2/graphics/buttons/user_input/delete_button.png").convert()
         self.deselect_button_image = pyi.load("V2/graphics/buttons/user_input/deselect_button.png").convert()
+        self.undo_button_image = pyi.load("V2/graphics/buttons/user_input/undo_button.png").convert()
 
         # Selecting / Swapping
         self.first_selected_tile_map_for_swapping = None
@@ -69,6 +70,11 @@ class Menu:
         # Deleting 
         self.deletion_complete_time = 0
 
+        # Undo-ing
+        # Create an undo button
+        self.undo_button = Button(abs(self.origin_point.x) + (screen_width - self.undo_button_image.get_width() - 100), (self.screen.get_height() - self.undo_button_image.get_height()) - 50, self.undo_button_image, purpose = "Undo")
+        self.action_performed = False
+        self.undo_made_time = 0
     # ----------------------------------------------------------------------------------------
     # Helper methods
 
@@ -375,6 +381,9 @@ class Menu:
     # ----------------------------------------------------------------------------------------
     # Managing tile maps menu methods
 
+    # -----------------------------------------
+    # Helper methods
+
     def create_buttons(self):
 
         # Define a variable which will increment, drawing the buttons at the next page if there are 8 on one page already
@@ -414,6 +423,9 @@ class Menu:
         for button in self.manage_tile_maps_buttons_group:
             # Draw the button at these positions
             button.draw(button.rect.x - abs(self.origin_point.x), button.rect.y)
+        
+        # Draw the undo button
+        self.undo_button.draw((screen_width - self.undo_button_image.get_width() - 100), (self.screen.get_height() - self.undo_button_image.get_height()) - 50)
     
     def calculate_pages(self):
 
@@ -466,6 +478,31 @@ class Menu:
         if pygame.time.get_ticks() - self.deletion_complete_time < 2000 and self.deletion_complete_time != 0:
             draw_text(f"Tilemap successfully deleted!", self.manage_tm_font_2, "chartreuse2", (screen_width / 2) - 125, 50, self.screen)
 
+        # ----------------------------------------------------------------------------------------
+        # Draw a text to indicate that the undo was successful, if it hasn't been 2 seconds since the undo was completed
+        if pygame.time.get_ticks() - self.undo_made_time < 2000 and self.undo_made_time != 0:
+            draw_text(f"Changes undone!", self.manage_tm_font_2, "aqua", (screen_width / 2) - 125, 50, self.screen)
+
+    def refresh_manage_tile_maps_menu(self):
+
+        # Update the existing tile maps dictionary with the new version of the tile maps text file
+        self.find_existing_tile_maps()
+
+        # Create the buttons again, (this is because if e.g. the 2nd tile map was deleted, the 3rd tile map before deletion would now be the 2nd tile map (every tile map moves down)
+        self.create_buttons()
+
+        # Calculate the number of pages again and go back to the previous page if we are over the maximum number of pages
+        self.calculate_pages()
+
+    def save_text_file_for_undo(self):
+
+        # In case that the user did not mean to swap the tile maps / delete the tile map, save a copy of the current version of text file
+        with open("V2/existing_tile_maps.txt", "r") as existing_tile_maps_file:
+            self.back_up_text_file = existing_tile_maps_file.read()    
+
+    # -----------------------------------------
+    # Interaction methods
+
     def select_tile_map_for_swapping(self, button):
         
         # Set the selected tile map for swapping to be the tile map that was selected (200 x 50)
@@ -483,6 +520,13 @@ class Menu:
         button.image = self.select_button_image
 
     def swap_tile_maps(self, second_button):
+
+        # ----------------------------------------------------------------------------------------
+        # Save the current version of the text file in case the user wants to undo their last action
+        self.save_text_file_for_undo()
+
+        # ----------------------------------------------------------------------------------------
+        # Swapping tile maps
 
         # Set the second selected tile map for swapping to be the stored tile map of the second button that was clicked
         self.second_selected_tile_map_for_swapping = second_button.stored_tile_map
@@ -530,6 +574,10 @@ class Menu:
     def delete_tile_map(self, tile_map_number):
 
         # ----------------------------------------------------------------------------------------
+        # Save the current version of the text file in case the user wants to undo their last action
+        self.save_text_file_for_undo()
+
+        # ----------------------------------------------------------------------------------------
         # Deleting the tile map
 
         # Declare an empty string which will hold all the tile maps except for the one selected for deletion
@@ -561,14 +609,9 @@ class Menu:
         # ----------------------------------------------------------------------------------------
         # Additional checks / features
 
-        # Update the existing tile maps dictionary with the new version of the tile maps text file
-        self.find_existing_tile_maps()
+        # Refresh the menu
 
-        # Create the buttons again, (this is because if e.g. the 2nd tile map was deleted, the 3rd tile map before deletion would now be the 2nd tile map (every tile map moves down)
-        self.create_buttons()
-
-        # Calculate the number of pages again and go back to the previous page if we are over the maximum number of pages
-        self.calculate_pages()
+        self.refresh_manage_tile_maps_menu()
 
         # If the user is now on a page with no buttons on it
         if self.current_page > self.num_of_pages:
@@ -612,6 +655,7 @@ class Menu:
                 print("Created a blank tile map! There are no more tile maps to delete!")
 
     def manage_tile_maps_menu(self):
+        # Note: Interaction with the buttons is inside the event loop
 
         # ------------------------------------------------
         # Main display
@@ -622,35 +666,41 @@ class Menu:
         # Draw all of the text for this menu
         self.draw_manage_tile_maps_menu_text()
 
-        # ------------------------------------------------
-        # Handle mouse input    
-        # Note: Interaction with the buttons is inside the event loop
+    def undo_action(self):
+        # For deletion and swapping, reverse the changes by going back to the previous version of the text file
 
-        # If the user has pressed the left click
-        if pygame.mouse.get_pressed()[0]:
+        # Open the file to write the contents
+        with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
+            # Reverse the changes
+            existing_tile_maps_file.write(self.back_up_text_file)
 
-            # If the mouse rect collides with the rect of the save as new tile map button
-            if self.mouse_rect.colliderect(self.return_to_editor_button.rect):
+        # Record the time that the undo was made
+        self.undo_made_time = pygame.time.get_ticks()
 
-                # Set the mouse cursor invisible again
-                pygame.mouse.set_visible(False)
+        # Output a message stating that the undo was performed
+        print(f"Changes undone!")
 
-                # Show the editor and stop showing the load menu
-                self.editor.show_editor = True
-                self.editor.show_manage_tile_maps_menu = False
+        # Reset action performed back to False
+        self.action_performed = False
 
-                # Reset the attribute that states whether the load menu has been updated
-                self.manage_tile_maps_menu_updated = False
+        # Refresh the menu
+        self.refresh_manage_tile_maps_menu()
 
-                # Reset the first selected tile map for swapping
-                self.first_selected_tile_map_for_swapping = None
+        # Calculate the amount we need to subtract from the button rectangle so that all button rects are aligned according to what page the user is currently on
+        realignment_y = (self.current_page - 1) * screen_height
+        for button in self.manage_tile_maps_buttons_group:
+            button.rect.y -= realignment_y
+        # ----------------------------------------------------------------------------------------
+        # Manually loading the tile map (in case that the user was on one of the tile maps when the swap was made)
 
-                # Reset the menu origin point's y co-ordinate, so that the user starts at the top of the menu again
-                self.menu_origin_point.y = 0
+        if self.editor.tile_map_selected_number != None:
 
-                # Exit the method
-                return None
-    
+            # Update the existing tile maps dictionary with the new version of the tile maps
+            self.find_existing_tile_maps()
+
+            # Load the correct tile map using the selected tile map number
+            self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[self.editor.tile_map_selected_number])
+
     # ----------------------------------------------------------------------------------------
     # Main program methods
 
@@ -692,7 +742,6 @@ class Menu:
                         self.full_screen = False
                         self.editor.full_screen = False
 
-
                     # Changing from windowed to full screen
                     else:
 
@@ -703,7 +752,10 @@ class Menu:
                         # Set the full screen attributes to False
                         self.full_screen = True
                         self.editor.full_screen = True
-            
+
+                    # Re - adjust the static buttons (i.e. return and un-do button) according to the current screen height
+                    self.undo_button.rect.y, self.return_to_editor_button.rect.y = self.screen.get_height() - self.undo_button_image.get_height() - 50, self.screen.get_height() - self.return_to_editor_button.image.get_height() - 50
+
                 # -------------------------------------------------
                 # Load menu events
 
@@ -771,7 +823,7 @@ class Menu:
                         # Decrement the current page we are on
                         self.current_page -= 1
                     
-                        # Move all buttons down
+                        # Move the buttons down (so that we can the correct buttons are displayed on screen)
                         for button in self.manage_tile_maps_buttons_group:
                             button.rect.y += screen_height
 
@@ -784,7 +836,7 @@ class Menu:
                         # Increment the current page we are on
                         self.current_page += 1
 
-                        # Move all buttons up (so that we can the correct buttons are displayed on screen)
+                        # Move the buttons up (so that we can the correct buttons are displayed on screen)
                         for button in self.manage_tile_maps_buttons_group:
                             button.rect.y -= screen_height
 
@@ -794,7 +846,7 @@ class Menu:
                 # If we are in the manage tile maps menu          
                 if self.editor.show_manage_tile_maps_menu == True and self.editor.show_editor == False:
 
-                    # For all buttons in the manage tile maps menu
+                    # For all tile map buttons in the manage tile maps menu
                     for button in self.manage_tile_maps_buttons_group:
 
                         # If it collides with the rectangle of the button
@@ -821,17 +873,20 @@ class Menu:
                                     
                                     # If the selected tile map for swapping is not the same as the tile map stored in the swap button and is not None
                                     if self.first_selected_tile_map_for_swapping != button.stored_tile_map and self.first_selected_tile_map_for_swapping != None:
+                                        
+                                        # Set action performed to True
+                                        self.action_performed = True
 
                                         # Swap the tile maps
                                         self.swap_tile_maps(button)
-                                        
+                 
                                         # Record the time that the swap was made
                                         self.swap_made_time = pygame.time.get_ticks() 
                                     
                                     # ---------------------------------------------
                                     # Resetting the select button image
 
-                                    # Iterate through the buttons group to find the button that 
+                                    # Iterate through the buttons group to find the button that was previously selected
                                     for previously_selected_button in self.manage_tile_maps_buttons_group:
                                         
                                         # If the button was the button that was previously selected 
@@ -843,8 +898,37 @@ class Menu:
                                 # Delete button
                                 case "Delete":
 
+                                    # Set action performed to True
+                                    self.action_performed = True
+                                    
                                     # Delete the tile map from the text file based on the line number in the text file
                                     self.delete_tile_map(tile_map_number = button.stored_tile_map_number)
+
+                    # If the mouse rect collides with the rect of the undo button
+                    if self.mouse_rect.colliderect(self.undo_button.rect):
+                        # If the use had deleted / swapped tile maps previously
+                        if self.action_performed == True:
+                            # Undo the action (Works for undoing swaps and deletions)
+                            self.undo_action()
+
+                    # If the mouse rect collides with the rect of the return to editor button
+                    if self.mouse_rect.colliderect(self.return_to_editor_button.rect):
+
+                        # Set the mouse cursor invisible again
+                        pygame.mouse.set_visible(False)
+
+                        # Show the editor and stop showing the load menu
+                        self.editor.show_editor = True
+                        self.editor.show_manage_tile_maps_menu = False
+
+                        # Reset the attribute that states whether the load menu has been updated
+                        self.manage_tile_maps_menu_updated = False
+
+                        # Reset the first selected tile map for swapping
+                        self.first_selected_tile_map_for_swapping = None
+
+                        # Reset the menu origin point's y co-ordinate, so that the user starts at the top of the menu again
+                        self.menu_origin_point.y = 0
 
     def run(self):
 
