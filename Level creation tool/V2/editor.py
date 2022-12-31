@@ -304,7 +304,6 @@ class Editor():
 
                 # If the mouse rect collides with the palette tile's rect
                 if self.mouse_rect.colliderect(palette_tile.rect):
-                    print(f"Clicked on {palette_tile}, palette_number = {palette_tile.palette_number}")
 
                     # Set the selected palette number to be the palette number of the palette tile that was clicked on
                     self.selected_palette_number = palette_tile.palette_number
@@ -321,22 +320,22 @@ class Editor():
                     self.extend_drawing_tiles_x()
                 
                 # If the mouse rect collides with the rect of the shrink x drawing tiles button
-                if self.mouse_rect.colliderect(self.drawing_tiles_shrink_x_button.rect):
+                elif self.mouse_rect.colliderect(self.drawing_tiles_shrink_x_button.rect):
                     # Shrink the drawing tiles by one column
                     self.shrink_drawing_tiles_x()
 
                 # If the mouse rect collides with the rect of the extend y drawing tiles button
-                if self.mouse_rect.colliderect(self.drawing_tiles_extend_y_button.rect):
+                elif self.mouse_rect.colliderect(self.drawing_tiles_extend_y_button.rect):
                     # Extend the drawing tiles by one row
                     self.extend_drawing_tiles_y()
 
                 # If the mouse rect collides with the rect of the shrink y drawing tiles button
-                if self.mouse_rect.colliderect(self.drawing_tiles_shrink_y_button.rect):
+                elif self.mouse_rect.colliderect(self.drawing_tiles_shrink_y_button.rect):
                     # Shrink the drawing tiles by one row
                     self.shrink_drawing_tiles_y()
 
                 # If the mouse rect collides with the rect of the load tile map button
-                if self.mouse_rect.colliderect(self.load_tile_map_button.rect):
+                elif self.mouse_rect.colliderect(self.load_tile_map_button.rect):
                     
                     # If the text file that stores all of the existing tile maps created is greater than 0 (It means there is at least one tile map inside)
                     if os.path.getsize("V2/existing_tile_maps.txt") > 0:
@@ -346,14 +345,20 @@ class Editor():
                         self.show_load_menu = True
 
                 # If the mouse rect collides with the rect of the manage tile maps button
-                if self.mouse_rect.colliderect(self.manage_tile_maps_button.rect):
+                elif self.mouse_rect.colliderect(self.manage_tile_maps_button.rect):
                         # Stop showing the editor
                         self.show_editor = False
                         # Show the manage tile maps menu
                         self.show_manage_tile_maps_menu = True
+                
+                # If the mouse rect collides with the rect of the new tile map button
+                elif self.mouse_rect.colliderect(self.new_tile_map_button.rect):
+                    
+                    # Create a new blank tile map, once the user makes changes to this tile map, it will be saved as a unique tile map
+                    self.create_new_blank_tile_map()
 
                 # If the mouse rect collides with the rect of the reset tile map button
-                if self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
+                elif self.mouse_rect.colliderect(self.reset_tile_map_button.rect):
                     # Reset the tile map
                     self.reset_tile_map()    
 

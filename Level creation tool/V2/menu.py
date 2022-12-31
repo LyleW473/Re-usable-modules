@@ -481,7 +481,7 @@ class Menu:
         # ----------------------------------------------------------------------------------------
         # Draw a text to indicate that the undo was successful, if it hasn't been 2 seconds since the undo was completed
         if pygame.time.get_ticks() - self.undo_made_time < 2000 and self.undo_made_time != 0:
-            draw_text(f"Changes undone!", self.manage_tm_font_2, "aqua", (screen_width / 2) - 125, 50, self.screen)
+            draw_text(f"Changes undone!", self.manage_tm_font_2, "aqua", (screen_width / 2) - 80, 50, self.screen)
 
     def refresh_manage_tile_maps_menu(self):
 
@@ -665,7 +665,7 @@ class Menu:
 
         # Draw all of the text for this menu
         self.draw_manage_tile_maps_menu_text()
-
+        pygame.draw.line(self.screen, "white", (screen_width / 2, 0), (screen_width / 2, screen_height), 1)
     def undo_action(self):
         # For deletion and swapping, reverse the changes by going back to the previous version of the text file
 
