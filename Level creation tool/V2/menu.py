@@ -47,7 +47,7 @@ class Menu:
                 self.load_existing_tile_map(tile_map = self.existing_tile_maps_dict[int(tile_map_number)])
 
                 # Set the tile map selected to be the number inside the text file
-                self.editor.tile_map_selected_number = tile_map_number
+                self.editor.tile_map_selected_number = int(tile_map_number)
 
         # ------------------------------------------- 
         # MENUS
@@ -123,14 +123,14 @@ class Menu:
             # For each line in the tile maps file
             for line in existing_tile_maps_file.readlines():
 
-                # If the line starts with "[[", it means this line contains the tile map
-                if line.startswith("[["):
+                # If the line starts with "?", it means this line contains the tile map
+                if line.startswith("?"):
 
                     # Increment the tile map count
                     tile_map_count += 1
                     
-                    # Create a new key:value pair in the existing tile maps dictionary, remove the \n at the end of each line
-                    self.existing_tile_maps_dict[tile_map_count] = line.strip("\n")          
+                    # Create a new key:value pair in the existing tile maps dictionary
+                    self.existing_tile_maps_dict[tile_map_count] = line.strip("\n")     
 
     def update_menus(self):
         
@@ -229,58 +229,74 @@ class Menu:
         string_tile_list = tile_map
 
         # ----------------------------------------------------------------------------------------
-        # Cleaning the string
+        # Finding the number of rows in the tile map and how many items are in each row
+        number_of_items_per_row = 0 
 
-        # Remove the first and last 2 brackets
-        string_tile_list = string_tile_list[2:-2]
+        # For all characters starting from the 2nd character (starts at 2nd character so that we avoid the "?" separator)
+        for i in range(1, len(string_tile_list)):
 
-        # After each sublist, separate them using a #
-        string_tile_list = string_tile_list.replace("], [", "#")
+            # If we have found a comma exit the for loop
+            if string_tile_list[i] == ",":
+                break
+            # Otherwise increment the number of items there are in one row
+            number_of_items_per_row += 1
 
-        # Separate each item in each sub list with an exclamation mark (this is because some tiles may have double digit palette numbers)
-        string_tile_list = string_tile_list.replace(", ", "!")
-
-        # Create lists of strings containing the tile numbers
-        string_tile_list = string_tile_list.split("#")
-
-        # Create a new string tile list
-        new_string_tile_list = []
-
-        # ----------------------------------------------------------------------------------------
-        # Converting back into a list (each digit is still a string, but this will be converted to an integer later)
-
-        # For each sub list in the string tile list
-        for sub_list in string_tile_list:
-
-            # Create a new sub list splitting each sublist wherever there is an exclamation mark
-            new_sub_list = sub_list.split("!")
-
-            # Add the new sub list to the new string tile list
-            new_string_tile_list.append(new_sub_list)
-       
+        """ 
+        To calculate the number of rows:
+        The number of rows would be the number of characters in the string minus the remainder from len(string_tile_list) % number_of_items_per_row. Dividing this number by the number of items in each row would then return the number of rows in the tile map
+        number_of_rows = int((len(string_tile_list) - (len(string_tile_list) % number_of_items_per_row)) / number_of_items_per_row) """
+        
         # ----------------------------------------------------------------------------------------
         # Converting back into a tile list of rectangles (The actual tile map)
 
-        # For each row in the new string tile list
-        for row_index, row in enumerate(new_string_tile_list):
-    
-            # Reset the row of items list for every row
-            row_of_items_list = []  
+        row_of_items_list = [] # Used to hold all the items in one row
+        row_index = 0 # Used to keep track of what row we are on so that tiles have the correct y position
+        item_index = 0 # Used to keep track of what item we are on in the row so that tiles have the correct x position
+        digit_string = "" # Used as some tiles may have double digit palette numbers
 
-            # For each item in the row
-            for item_count, item in enumerate(row):
-                    
+        # Start from the 2nd character so that we avoid the "?" separator
+        for i in range(1, len(string_tile_list)):
+
+            if string_tile_list[i] == "!":
+
                 # Create a rect, spacing them out between each other by the tile size
-                rect = pygame.Rect((item_count * self.editor.tile_size), (row_index * self.editor.tile_size), self.editor.tile_size, self.editor.tile_size)
+                rect = pygame.Rect(( (item_index % number_of_items_per_row) * self.editor.tile_size), (row_index * self.editor.tile_size), self.editor.tile_size, self.editor.tile_size)
 
                 # Create a tile containing the rect and palette number of the item, converting the item into an int (as it should be a string at this stage)
-                tile = [rect, int(item)]
+                tile = [rect, int(digit_string)]
 
                 # Add the tile to the row of items list
                 row_of_items_list.append(tile)
+                 
+                # Reset the digit string 
+                digit_string = ""
 
-            # Add the row of items list to the tile list
-            tile_list.append(row_of_items_list)
+                # Increment the item index
+                item_index += 1
+
+                # Go to the next character
+                continue
+
+            # If we have reached a comma separator
+            if string_tile_list[i] == ",":
+
+                # Add the row of items to the list
+                tile_list.append(row_of_items_list)
+
+                # Reset the row of items list
+                row_of_items_list = []
+
+                # Increment the row index
+                row_index += 1
+
+                # Reset the item index
+                item_index = 0
+
+                # Go to the next character
+                continue
+            
+            # If the character is not a "," separator or an "!" separator, it must be a number, so add it to the digit string
+            digit_string += string_tile_list[i]
         
         # Output a message in the terminal to indicate that the tile map selected has finished loading
         print("Loading complete.")
@@ -317,23 +333,29 @@ class Menu:
         # ----------------------------------------------------------------------------------------
         # Convert the current tile map into a tile map of its palette numbers
 
-        # List which will hold all the rows of items inside the tile map
-        tile_map_to_be_saved = []
+        # String which will hold all the rows of items inside the tile map. The separator for each tile map will be "?"
+        tile_map_to_be_saved = "?"
 
         # For each row in the tile list
         for row_count, row in enumerate(tile_list):
 
-            # Create a new row of items list
-            row_of_items_list = []
+            # Create a new row of items string
+            row_of_items_string = ""
 
             # For all items in the row
             for i in range(0, len(row)):
 
-                # Add the palette number of the tile to the row of items list
-                row_of_items_list.append(tile_list[row_count][i][1])
+                # Add the palette number of the tile to the row of items string
+                row_of_items_string += str(tile_list[row_count][i][1])
+
+                # After each palette number, add an "!" separator which is used to distinguish between palette numbers when loading the tile map
+                row_of_items_string += str("!")
+
+            # Add a separator (in this case a comma), so that when we load the map we know how many elements are in each row
+            row_of_items_string += ","
 
             # Add the row of items list to the the tile map to be saved
-            tile_map_to_be_saved.append(row_of_items_list)
+            tile_map_to_be_saved += row_of_items_string
 
         # ----------------------------------------------------------------------------------------
         # Save the tile map according to the user's choice
@@ -569,13 +591,13 @@ class Menu:
             # Swapping lines
 
             # Replace the first selected tile map with a temporary string
-            existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.first_selected_tile_map_for_swapping, "?")
+            existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.first_selected_tile_map_for_swapping, "#")
 
             # Replace the second selected tile map with the first selected tile map
             existing_tile_maps_file_content = existing_tile_maps_file_content.replace(self.second_selected_tile_map_for_swapping, self.first_selected_tile_map_for_swapping)
             
             # Replace the temporary string with the second selected tile map
-            existing_tile_maps_file_content = existing_tile_maps_file_content.replace("?", self.second_selected_tile_map_for_swapping)
+            existing_tile_maps_file_content = existing_tile_maps_file_content.replace("#", self.second_selected_tile_map_for_swapping)
 
         # Open the file to write the contents
         with open("V2/existing_tile_maps.txt", "w") as existing_tile_maps_file:
